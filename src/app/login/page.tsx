@@ -37,7 +37,7 @@ export default function LoginPage() {
     document.cookie = 'collateraliq_auth=true; path=/; max-age=86400';
 
     setTimeout(() => {
-      router.push('/');
+      window.location.href = '/';
     }, 350);
   };
 
