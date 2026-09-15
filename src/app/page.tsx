@@ -58,7 +58,10 @@ export default function Home() {
   useEffect(() => {
     const isAuth =
       typeof window !== 'undefined' &&
-      (localStorage.getItem('collateral_iq_auth') === 'true' || document.cookie.includes('collateral_iq_auth=true'));
+      (localStorage.getItem('collateral_iq_auth') === 'true' ||
+        localStorage.getItem('collateraliq_auth') === 'true' ||
+        document.cookie.includes('collateral_iq_auth=true') ||
+        document.cookie.includes('collateraliq_auth=true'));
     if (!isAuth) {
       router.push('/login');
     }
@@ -66,7 +69,9 @@ export default function Home() {
 
   const handleLogout = () => {
     localStorage.removeItem('collateral_iq_auth');
+    localStorage.removeItem('collateraliq_auth');
     document.cookie = 'collateral_iq_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = 'collateraliq_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     router.push('/login');
   };
 

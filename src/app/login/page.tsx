@@ -32,7 +32,9 @@ export default function LoginPage() {
 
     // Set auth token in localStorage & cookie for instant verification
     localStorage.setItem('collateral_iq_auth', 'true');
+    localStorage.setItem('collateraliq_auth', 'true');
     document.cookie = 'collateral_iq_auth=true; path=/; max-age=86400';
+    document.cookie = 'collateraliq_auth=true; path=/; max-age=86400';
 
     setTimeout(() => {
       router.push('/');
