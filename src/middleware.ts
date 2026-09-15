@@ -14,7 +14,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow all page requests to proceed (root / is redirected to /login by next.config.mjs)
+  // 2. Read session cookie (checking both collateraliq_auth & collateral_iq_auth)
+  const authSession =
+    request.cookies.get('collateraliq_auth')?.value ||
+    request.cookies.get('collateral_iq_auth')?.value;
+
+  // 3. Unauthenticated visitor trying to access protected route -> redirect to /login
+  if (!authSession && pathname !== '/login') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
   return NextResponse.next();
 }
 

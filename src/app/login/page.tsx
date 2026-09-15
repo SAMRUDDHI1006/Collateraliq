@@ -30,11 +30,11 @@ export default function LoginPage() {
     if (e) e.preventDefault();
     setIsAuthenticating(true);
 
-    // Set auth token in localStorage & cookie for instant verification
+    // Set auth token in localStorage & cookie for instant verification across Vercel deployments
     localStorage.setItem('collateral_iq_auth', 'true');
     localStorage.setItem('collateraliq_auth', 'true');
-    document.cookie = 'collateral_iq_auth=true; path=/; max-age=86400';
-    document.cookie = 'collateraliq_auth=true; path=/; max-age=86400';
+    document.cookie = 'collateral_iq_auth=true; path=/; max-age=86400; SameSite=Lax';
+    document.cookie = 'collateraliq_auth=true; path=/; max-age=86400; SameSite=Lax';
 
     setTimeout(() => {
       window.location.href = '/';
