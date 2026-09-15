@@ -54,25 +54,37 @@ export default function Home() {
   const [isSanctionSuccessModalOpen, setIsSanctionSuccessModalOpen] = useState<boolean>(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState<boolean>(false);
 
-  // Auth redirect check
+  // Auth redirect check: enforce /login on every fresh visit, link click, page refresh (F5), or logout
   useEffect(() => {
-    const isAuth =
-      typeof window !== 'undefined' &&
-      (localStorage.getItem('collateral_iq_auth') === 'true' ||
-        localStorage.getItem('collateraliq_auth') === 'true' ||
-        document.cookie.includes('collateral_iq_auth=true') ||
-        document.cookie.includes('collateraliq_auth=true'));
-    if (!isAuth) {
-      router.push('/login');
+    if (typeof window === 'undefined') return;
+
+    // Check if page was refreshed (F5 / Reload)
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
+
+    if (isReload) {
+      sessionStorage.clear();
+      localStorage.removeItem('collateral_iq_auth');
+      localStorage.removeItem('collateraliq_auth');
+      document.cookie = 'collateral_iq_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie = 'collateraliq_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      window.location.href = '/login';
+      return;
     }
-  }, [router]);
+
+    const isAuth = sessionStorage.getItem('collateraliq_authenticated_session') === 'true';
+    if (!isAuth) {
+      window.location.href = '/login';
+    }
+  }, []);
 
   const handleLogout = () => {
+    sessionStorage.clear();
     localStorage.removeItem('collateral_iq_auth');
     localStorage.removeItem('collateraliq_auth');
     document.cookie = 'collateral_iq_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     document.cookie = 'collateraliq_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   // Load initial flagship case once benchmarks are ready
