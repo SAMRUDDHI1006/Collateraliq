@@ -7,6 +7,7 @@ import { Sidebar, NavView } from '@/components/layout/Sidebar';
 import { MetricStrip } from '@/components/dashboard/MetricStrip';
 import { AnalyticsGrid } from '@/components/dashboard/AnalyticsGrid';
 import { LiveTrackingTable } from '@/components/dashboard/LiveTrackingTable';
+import { ExecutiveTriagePanel } from '@/components/dashboard/ExecutiveTriagePanel';
 import { CaseContextStrip } from '@/components/workbench/CaseContextStrip';
 import { DocumentViewer } from '@/components/workbench/DocumentViewer';
 import { VerificationMatrix } from '@/components/workbench/VerificationMatrix';
@@ -282,35 +283,8 @@ export default function Home() {
           {/* VIEW 1: Operations Dashboard (Screen 1) */}
           {currentView === 'dashboard' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-              {/* Top Page Title & Regulatory Badge */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
-                    Collateral Intelligence Operations Dashboard
-                  </h1>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    AI-Assisted decision support for Home Loans &amp; LAP &bull; Greater Mumbai &amp; Thane
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-700/60 font-semibold">
-                    RBI Master Direction Aligned &bull; LTV &le; 75%
-                  </span>
-                </div>
-              </div>
-
-              {/* 4 KPI Metric Strip Cards */}
-              <MetricStrip liveKpis={liveKpis} />
-
-              {/* Visuals Grid: Triage Breakdown & Portfolio Exposure */}
-              <AnalyticsGrid
-                liveKpis={liveKpis}
-                localityBenchmarks={benchmarks.locality_benchmarks}
-                onFilterLocality={(loc) => {
-                  const match = cases.find((c) => c.locality === loc);
-                  if (match) handleSelectCase(match.case_id);
-                }}
-              />
+              {/* Executive 10-Second Collateral Triage Panel (Asset Risk Focus) */}
+              <ExecutiveTriagePanel currentCase={currentCase} />
 
               {/* Live Tracking Stream Table */}
               <LiveTrackingTable
