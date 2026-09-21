@@ -53,9 +53,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             <span className="font-extrabold text-lg tracking-tight text-white font-heading">
               Collateral<span className="text-cyan-400 font-extrabold">IQ</span>
             </span>
-            <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-800/60 shadow-xs">
-              v2.4 Pro
-            </span>
+            <span className="text-[11px] font-mono text-slate-500 font-normal">v2.4</span>
           </div>
           <p className="text-[11px] text-[#94A3B8] font-medium tracking-wide leading-none mt-0.5">
             Collateral Intelligence Suite
@@ -80,7 +78,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-            placeholder="Search Case ID (e.g. CLIQ-DADAR-001), Borrower, Locality..."
+            placeholder="Search Case ID, Borrower, Locality..."
             className="w-full bg-transparent text-xs text-[#F8FAFC] placeholder:text-[#64748B] focus:outline-none font-mono"
           />
           <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono text-[#94A3B8] bg-[#0B111A] border border-white/[0.12] px-1.5 py-0.5 rounded shadow-inner shrink-0">
@@ -125,16 +123,8 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
         )}
       </div>
 
-      {/* Right: Live Engine Indicator, Notifications, User Profile */}
+      {/* Right: Notifications & User Profile */}
       <div className="flex items-center gap-3 sm:gap-4">
-        <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs font-medium shadow-xs">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="font-mono text-[11px] tracking-tight">Intelligence Engine Active</span>
-        </div>
-
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
