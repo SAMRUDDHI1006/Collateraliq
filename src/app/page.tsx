@@ -11,7 +11,6 @@ import { CaseContextStrip } from '@/components/workbench/CaseContextStrip';
 import { DocumentViewer } from '@/components/workbench/DocumentViewer';
 import { VerificationMatrix } from '@/components/workbench/VerificationMatrix';
 import { ValuationWorkbench } from '@/components/workbench/ValuationWorkbench';
-import { StickyGovernanceFooter } from '@/components/workbench/StickyGovernanceFooter';
 import { NewCaseModal } from '@/components/intake/NewCaseModal';
 import { ClarificationModal } from '@/components/modals/ClarificationModal';
 import { RejectDocketModal } from '@/components/modals/RejectDocketModal';
@@ -374,14 +373,6 @@ export default function Home() {
                   />
                 </div>
               </div>
-
-              <StickyGovernanceFooter
-                exceptionAcknowledged={exceptionAcknowledged}
-                hasPendingExceptions={Math.abs(currentCase.deviation?.percentageDiff || 0) > 8}
-                onRequestClarification={() => setIsClarificationModalOpen(true)}
-                onRejectDocket={() => setIsRejectModalOpen(true)}
-                onProceedToSanction={handleProceedToSanction}
-              />
             </div>
           )}
 
