@@ -259,17 +259,17 @@ export const AnalysisReportModal: React.FC<AnalysisReportModalProps> = ({ isOpen
   ];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[60] bg-[#070B12]/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150 font-sans">
+      <div className="bg-[#101824] border border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
 
         {/* Report Header */}
-        <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 bg-[#0B111A] border-b border-white/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center">
-              <FileText className="w-4 h-4 text-blue-400" />
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-cyan-400" />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold text-white">Collateral Intelligence Analysis Report</h2>
+              <h2 className="text-sm font-heading font-extrabold text-white tracking-tight">Collateral Intelligence Analysis Report</h2>
               <p className="text-[11px] text-slate-400 font-mono">
                 {reportId} &bull; Case: {caseId} &bull; {borrowerName} &bull; {product}
               </p>
@@ -278,27 +278,27 @@ export const AnalysisReportModal: React.FC<AnalysisReportModalProps> = ({ isOpen
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
-              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-cyan-950/40"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download Report</span>
             </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer">
+            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Page Navigation Tabs */}
-        <div className="px-6 py-2 bg-slate-950/80 border-b border-slate-800 flex items-center gap-1 overflow-x-auto shrink-0">
+        <div className="px-6 py-2 bg-[#070B12] border-b border-white/10 flex items-center gap-1 overflow-x-auto shrink-0 font-mono">
           {pageLabels.map((p) => (
             <button
               key={p.num}
               onClick={() => setCurrentPage(p.num)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
                 currentPage === p.num
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  ? 'bg-cyan-500 text-slate-950 font-bold shadow-md'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
               }`}
             >
               {p.icon}

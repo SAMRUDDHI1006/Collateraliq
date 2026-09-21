@@ -253,30 +253,30 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-in fade-in duration-150">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#070B12]/85 backdrop-blur-md flex items-center justify-center p-4 select-none animate-in fade-in duration-150 font-sans">
+      <div className="bg-[#101824] border border-white/10 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="px-6 py-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#0B111A] border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold">
+            <div className="w-9 h-9 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-base font-heading font-extrabold text-white tracking-tight flex items-center gap-2">
                 <span>+ New Loan Case Assessment</span>
                 {currentStep > 0 && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/60">
                     Step 0{currentStep} of 07
                   </span>
                 )}
                 {selectedProduct && (
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
                     {selectedProduct}
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 font-sans">
                 Residential Collateral Assessment &amp; Independent Valuer Report Reconciliation Wizard
               </p>
             </div>
@@ -285,12 +285,12 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handlePreFillDemo}
-              className="px-3 py-1.5 rounded-lg bg-blue-950/80 hover:bg-blue-900 border border-blue-700/60 text-blue-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-700/60 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               <span>Pre-fill CLIQ-DADAR-001 Demo</span>
             </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer">
+            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -298,17 +298,17 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
 
         {/* Step Progress Indicator (01 - 07, hidden on step 0) */}
         {currentStep > 0 && (
-          <div className="px-6 py-2 bg-slate-950/80 border-b border-slate-800 overflow-x-auto flex items-center justify-between text-[11px] font-mono font-semibold">
+          <div className="px-6 py-2 bg-[#070B12] border-b border-white/10 overflow-x-auto flex items-center justify-between text-[11px] font-mono font-semibold">
             {stepLabels.map((s) => (
               <div
                 key={s.num}
                 onClick={() => { if (s.num <= currentStep) setCurrentStep(s.num as WizardStep); }}
-                className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-all ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded cursor-pointer transition-all ${
                   currentStep === s.num
-                    ? 'bg-blue-600 text-white font-bold'
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-md'
                     : currentStep > s.num
                     ? 'text-emerald-400 bg-emerald-950/40 border border-emerald-800/60'
-                    : 'text-slate-500'
+                    : 'text-slate-500 hover:text-slate-400'
                 }`}
               >
                 <span>0{s.num}.</span>
@@ -447,13 +447,13 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={employmentType}
                     onChange={(e) => setEmploymentType(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    <option value="Salaried">Salaried</option>
-                    <option value="Self-Employed">Self-Employed</option>
-                    <option value="Business Owner">Business Owner</option>
-                    <option value="Professional">Professional</option>
-                    <option value="Other">Other</option>
+                    <option value="Salaried" className="bg-[#0B111A] text-slate-200">Salaried</option>
+                    <option value="Self-Employed" className="bg-[#0B111A] text-slate-200">Self-Employed</option>
+                    <option value="Business Owner" className="bg-[#0B111A] text-slate-200">Business Owner</option>
+                    <option value="Professional" className="bg-[#0B111A] text-slate-200">Professional</option>
+                    <option value="Other" className="bg-[#0B111A] text-slate-200">Other</option>
                   </select>
                 </div>
                 <div>
@@ -514,15 +514,15 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={loanPurpose}
                     onChange={(e) => setLoanPurpose(e.target.value)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    <option value="">Select purpose...</option>
-                    {selectedProduct === 'Home Loan' && <option value="Home Purchase">Home Purchase</option>}
-                    {selectedProduct === 'Home Loan' && <option value="Construction">Construction</option>}
-                    {selectedProduct === 'LAP' && <option value="Business Expansion">Business Expansion</option>}
-                    {selectedProduct === 'LAP' && <option value="Working Capital">Working Capital</option>}
-                    {selectedProduct === 'LAP' && <option value="Personal Use">Personal Use</option>}
-                    {isBT && <option value="Balance Transfer">Balance Transfer</option>}
+                    <option value="" className="bg-[#0B111A] text-slate-200">Select purpose...</option>
+                    {selectedProduct === 'Home Loan' && <option value="Home Purchase" className="bg-[#0B111A] text-slate-200">Home Purchase</option>}
+                    {selectedProduct === 'Home Loan' && <option value="Construction" className="bg-[#0B111A] text-slate-200">Construction</option>}
+                    {selectedProduct === 'LAP' && <option value="Business Expansion" className="bg-[#0B111A] text-slate-200">Business Expansion</option>}
+                    {selectedProduct === 'LAP' && <option value="Working Capital" className="bg-[#0B111A] text-slate-200">Working Capital</option>}
+                    {selectedProduct === 'LAP' && <option value="Personal Use" className="bg-[#0B111A] text-slate-200">Personal Use</option>}
+                    {isBT && <option value="Balance Transfer" className="bg-[#0B111A] text-slate-200">Balance Transfer</option>}
                   </select>
                 </div>
 
@@ -700,12 +700,12 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                           <select
                             value={previousValuationMethod}
                             onChange={(e) => setPreviousValuationMethod(e.target.value)}
-                            className="w-full px-3 py-1.5 bg-white text-slate-900 rounded text-xs font-semibold cursor-pointer"
+                            className="w-full px-3 py-1.5 bg-[#0B111A] border border-white/10 text-slate-200 rounded text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                           >
-                            <option value="Sales Comparison Approach">Sales Comparison Approach</option>
-                            <option value="Income Approach">Income Approach</option>
-                            <option value="Cost Approach">Cost Approach</option>
-                            <option value="Discounted Cash Flow">Discounted Cash Flow</option>
+                            <option value="Sales Comparison Approach" className="bg-[#0B111A] text-slate-200">Sales Comparison Approach</option>
+                            <option value="Income Approach" className="bg-[#0B111A] text-slate-200">Income Approach</option>
+                            <option value="Cost Approach" className="bg-[#0B111A] text-slate-200">Cost Approach</option>
+                            <option value="Discounted Cash Flow" className="bg-[#0B111A] text-slate-200">Discounted Cash Flow</option>
                           </select>
                         </div>
                         <div>
@@ -764,10 +764,10 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
                     {REGIONS_22.map((r) => (
-                      <option key={r} value={r} className="bg-white text-slate-900">
+                      <option key={r} value={r} className="bg-[#0B111A] text-slate-200">
                         {r} (Benchmark: ₹{(BENCHMARKS[r] || 35000).toLocaleString()}/sq.ft)
                       </option>
                     ))}
@@ -801,12 +801,12 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={propertyType}
                     onChange={(e) => setPropertyType(e.target.value as PropertyType)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    <option value="Apartment">Apartment</option>
-                    <option value="Independent House">Independent House</option>
-                    <option value="Bungalow">Bungalow</option>
-                    <option value="Villa">Villa</option>
+                    <option value="Apartment" className="bg-[#0B111A] text-slate-200">Apartment</option>
+                    <option value="Independent House" className="bg-[#0B111A] text-slate-200">Independent House</option>
+                    <option value="Bungalow" className="bg-[#0B111A] text-slate-200">Bungalow</option>
+                    <option value="Villa" className="bg-[#0B111A] text-slate-200">Villa</option>
                   </select>
                 </div>
 
@@ -815,13 +815,13 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={bhk}
                     onChange={(e) => setBhk(e.target.value)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    <option value="1 BHK">1 BHK</option>
-                    <option value="2 BHK">2 BHK</option>
-                    <option value="3 BHK">3 BHK</option>
-                    <option value="4 BHK">4 BHK</option>
-                    <option value="4+ BHK">4+ BHK</option>
+                    <option value="1 BHK" className="bg-[#0B111A] text-slate-200">1 BHK</option>
+                    <option value="2 BHK" className="bg-[#0B111A] text-slate-200">2 BHK</option>
+                    <option value="3 BHK" className="bg-[#0B111A] text-slate-200">3 BHK</option>
+                    <option value="4 BHK" className="bg-[#0B111A] text-slate-200">4 BHK</option>
+                    <option value="4+ BHK" className="bg-[#0B111A] text-slate-200">4+ BHK</option>
                   </select>
                 </div>
 
@@ -896,11 +896,11 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={occupancy}
                     onChange={(e) => setOccupancy(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    <option value="Self-occupied">Self-occupied</option>
-                    <option value="Tenant">Tenant</option>
-                    <option value="Vacant">Vacant</option>
+                    <option value="Self-occupied" className="bg-[#0B111A] text-slate-200">Self-occupied</option>
+                    <option value="Tenant" className="bg-[#0B111A] text-slate-200">Tenant</option>
+                    <option value="Vacant" className="bg-[#0B111A] text-slate-200">Vacant</option>
                   </select>
                 </div>
               </div>
@@ -1026,12 +1026,12 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
                   <select
                     value={valuerConditionRating}
                     onChange={(e) => setValuerConditionRating(e.target.value)}
-                    className="w-full px-3 py-2 bg-white text-slate-900 rounded-lg text-xs font-semibold cursor-pointer"
+                    className="w-full px-3 py-2 bg-[#0B111A] border border-white/10 text-slate-200 rounded-lg text-xs font-medium cursor-pointer focus:outline-none focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500"
                   >
-                    <option value="Excellent">Excellent</option>
-                    <option value="Good">Good</option>
-                    <option value="Average">Average</option>
-                    <option value="Below Average">Below Average</option>
+                    <option value="Excellent" className="bg-[#0B111A] text-slate-200">Excellent</option>
+                    <option value="Good" className="bg-[#0B111A] text-slate-200">Good</option>
+                    <option value="Average" className="bg-[#0B111A] text-slate-200">Average</option>
+                    <option value="Below Average" className="bg-[#0B111A] text-slate-200">Below Average</option>
                   </select>
                 </div>
                 <div>
@@ -1183,12 +1183,12 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
         </div>
 
         {/* Modal Footer Navigation */}
-        <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#0B111A] border-t border-white/10 flex items-center justify-between font-sans">
           {currentStep > 0 ? (
             <button
               onClick={() => setCurrentStep((prev) => (prev > 1 ? ((prev - 1) as WizardStep) : 0))}
               disabled={currentStep === 6}
-              className="px-4 py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 disabled:opacity-50 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-lg border border-white/10 hover:bg-white/10 text-slate-300 disabled:opacity-50 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{currentStep === 1 ? 'Back to Loan Type' : 'Previous Step'}</span>
@@ -1200,7 +1200,7 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
           {currentStep < 5 && currentStep > 0 && (
             <button
               onClick={() => setCurrentStep((prev) => ((prev + 1) as WizardStep))}
-              className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+              className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 text-xs font-bold flex items-center gap-1.5 shadow-md shadow-cyan-950/40 transition-all cursor-pointer"
             >
               <span>Next Step</span>
               <ArrowRight className="w-4 h-4" />
@@ -1210,7 +1210,7 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
           {currentStep === 5 && (
             <button
               onClick={handleRunAnalysis}
-              className="px-6 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg cursor-pointer"
+              className="px-6 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-950/50 cursor-pointer transition-all"
             >
               <Sparkles className="w-4 h-4" />
               <span>RUN COLLATERAL ANALYSIS</span>
@@ -1220,7 +1220,7 @@ export const NewCaseModal: React.FC<NewCaseModalProps> = ({
           {currentStep === 7 && (
             <button
               onClick={handleFinalSubmit}
-              className="px-6 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg cursor-pointer"
+              className="px-6 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer transition-all"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Open Case Analysis Workbench</span>

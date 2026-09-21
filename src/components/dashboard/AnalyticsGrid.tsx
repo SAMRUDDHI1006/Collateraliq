@@ -67,142 +67,185 @@ export const AnalyticsGrid: React.FC<AnalyticsGridProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 select-none">
       {/* 1. Product Distribution */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-sm">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
+      <div className="bg-[#101824] rounded-2xl border border-white/[0.08] p-4 shadow-card space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-400" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Product Distribution</h3>
+            <div className="w-6 h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-heading">Product Distribution</h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+          <span className="text-[10px] font-mono text-[#94A3B8] bg-[#0B111A] px-2.5 py-0.5 rounded-full border border-white/[0.08]">
             {total} Cases
           </span>
         </div>
 
-        <div className="mt-3.5 space-y-2 text-xs">
+        <div className="space-y-2 text-xs">
           <div
             onClick={() => onSelectProduct?.('Home Loan')}
-            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-blue-500 cursor-pointer transition-all"
+            className="group p-3 rounded-xl bg-[#0B111A] border border-white/[0.06] hover:border-cyan-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 relative overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-              <span className="font-semibold text-slate-200">Home Loans</span>
-            </div>
-            <div className="font-mono text-right">
-              <span className="font-bold text-blue-400">{pct(homeLoanCount)}%</span>
-              <span className="text-slate-400 ml-1.5">({homeLoanCount})</span>
+            {/* Subtle background progress fill */}
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-cyan-500/[0.04] transition-all duration-500"
+              style={{ width: `${pct(homeLoanCount)}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-glow-cyan" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">Home Loans</span>
+              </div>
+              <div className="font-mono text-right">
+                <span className="font-bold text-cyan-400">{pct(homeLoanCount)}%</span>
+                <span className="text-[#64748B] ml-1.5 font-medium">({homeLoanCount})</span>
+              </div>
             </div>
           </div>
 
           <div
             onClick={() => onSelectProduct?.('LAP')}
-            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-indigo-500 cursor-pointer transition-all"
+            className="group p-3 rounded-xl bg-[#0B111A] border border-white/[0.06] hover:border-blue-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 relative overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
-              <span className="font-semibold text-slate-200">Loan Against Property (LAP)</span>
-            </div>
-            <div className="font-mono text-right">
-              <span className="font-bold text-indigo-400">{pct(lapCount)}%</span>
-              <span className="text-slate-400 ml-1.5">({lapCount})</span>
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-blue-500/[0.04] transition-all duration-500"
+              style={{ width: `${pct(lapCount)}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 shadow-glow-blue" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">Loan Against Property (LAP)</span>
+              </div>
+              <div className="font-mono text-right">
+                <span className="font-bold text-blue-400">{pct(lapCount)}%</span>
+                <span className="text-[#64748B] ml-1.5 font-medium">({lapCount})</span>
+              </div>
             </div>
           </div>
 
           <div
             onClick={() => onSelectProduct?.('Balance Transfer')}
-            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-emerald-500 cursor-pointer transition-all"
+            className="group p-3 rounded-xl bg-[#0B111A] border border-white/[0.06] hover:border-emerald-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 relative overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span className="font-semibold text-slate-200">Home Loan Balance Transfer</span>
-            </div>
-            <div className="font-mono text-right">
-              <span className="font-bold text-emerald-400">{pct(btCount)}%</span>
-              <span className="text-slate-400 ml-1.5">({btCount})</span>
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-emerald-500/[0.04] transition-all duration-500"
+              style={{ width: `${pct(btCount)}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">Home Loan Balance Transfer</span>
+              </div>
+              <div className="font-mono text-right">
+                <span className="font-bold text-emerald-400">{pct(btCount)}%</span>
+                <span className="text-[#64748B] ml-1.5 font-medium">({btCount})</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* 2. Review Level Breakdown */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-sm">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
+      <div className="bg-[#101824] rounded-2xl border border-white/[0.08] p-4 shadow-card space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Review Level Classification</h3>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
+              <ShieldAlert className="w-3.5 h-3.5" />
+            </div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-heading">Review Level Classification</h3>
           </div>
-          <span className="text-[10px] font-mono text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">
+          <span className="text-[10px] font-mono text-amber-400 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-800/80">
             Explainable Risk
           </span>
         </div>
 
-        <div className="mt-3.5 space-y-2 text-xs">
+        <div className="space-y-2 text-xs">
           <div
             onClick={() => onSelectReviewLevel?.('LOW')}
-            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-emerald-500 cursor-pointer transition-all"
+            className="group p-3 rounded-xl bg-[#0B111A] border border-white/[0.06] hover:border-emerald-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 relative overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-              <span className="font-semibold text-slate-200">🟢 Low Review</span>
-            </div>
-            <div className="font-mono text-right">
-              <span className="font-bold text-emerald-400">{pct(lowCount)}%</span>
-              <span className="text-slate-400 ml-1.5">({lowCount})</span>
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-emerald-500/[0.04] transition-all duration-500"
+              style={{ width: `${pct(lowCount)}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">🟢 Low Review</span>
+              </div>
+              <div className="font-mono text-right">
+                <span className="font-bold text-emerald-400">{pct(lowCount)}%</span>
+                <span className="text-[#64748B] ml-1.5 font-medium">({lowCount})</span>
+              </div>
             </div>
           </div>
 
           <div
             onClick={() => onSelectReviewLevel?.('MEDIUM')}
-            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-amber-500 cursor-pointer transition-all"
+            className="group p-3 rounded-xl bg-[#0B111A] border border-white/[0.06] hover:border-amber-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 relative overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              <span className="font-semibold text-slate-200">🟡 Medium Review</span>
-            </div>
-            <div className="font-mono text-right">
-              <span className="font-bold text-amber-400">{pct(medCount)}%</span>
-              <span className="text-slate-400 ml-1.5">({medCount})</span>
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-amber-500/[0.04] transition-all duration-500"
+              style={{ width: `${pct(medCount)}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">🟡 Medium Review</span>
+              </div>
+              <div className="font-mono text-right">
+                <span className="font-bold text-amber-400">{pct(medCount)}%</span>
+                <span className="text-[#64748B] ml-1.5 font-medium">({medCount})</span>
+              </div>
             </div>
           </div>
 
           <div
             onClick={() => onSelectReviewLevel?.('HIGH')}
-            className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-rose-500 cursor-pointer transition-all"
+            className="group p-3 rounded-xl bg-[#0B111A] border border-white/[0.06] hover:border-rose-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 relative overflow-hidden"
           >
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-              <span className="font-semibold text-slate-200">🔴 High Review</span>
-            </div>
-            <div className="font-mono text-right">
-              <span className="font-bold text-rose-400">{pct(highCount)}%</span>
-              <span className="text-slate-400 ml-1.5">({highCount})</span>
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-rose-500/[0.04] transition-all duration-500"
+              style={{ width: `${pct(highCount)}%` }}
+            />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="font-semibold text-slate-200 group-hover:text-white">🔴 High Review</span>
+              </div>
+              <div className="font-mono text-right">
+                <span className="font-bold text-rose-400">{pct(highCount)}%</span>
+                <span className="text-[#64748B] ml-1.5 font-medium">({highCount})</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* 3. Regional Portfolio Analysis (Top 6 Regions) */}
-      <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-sm">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800">
+      <div className="bg-[#101824] rounded-2xl border border-white/[0.08] p-4 shadow-card space-y-3">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">Top Regional Concentration</h3>
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <MapPin className="w-3.5 h-3.5" />
+            </div>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-heading">Top Regional Concentration</h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-            22 Regions Total
+          <span className="text-[10px] font-mono text-[#94A3B8] bg-[#0B111A] px-2.5 py-0.5 rounded-full border border-white/[0.08]">
+            22 Regions
           </span>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {topRegions.map(([reg, rData]) => {
             const avgLtv = rData.count > 0 ? (rData.ltvSum / rData.count).toFixed(1) : '0';
             return (
               <div
                 key={reg}
                 onClick={() => onSelectRegion?.(reg)}
-                className="p-2 bg-slate-950 rounded-lg border border-slate-800 hover:border-blue-500 cursor-pointer transition-all space-y-0.5"
+                className="p-2.5 bg-[#0B111A] rounded-xl border border-white/[0.06] hover:border-cyan-500/40 hover:bg-[#141E2B] cursor-pointer transition-all duration-200 space-y-1 group"
               >
-                <span className="font-bold text-white text-xs block truncate">{reg}</span>
-                <div className="flex justify-between items-center text-[10px] font-mono text-slate-400">
+                <span className="font-bold text-slate-200 group-hover:text-white text-xs block truncate">{reg}</span>
+                <div className="flex justify-between items-center text-[10px] font-mono text-[#64748B]">
                   <span>{rData.count} cases</span>
                   <span className="text-emerald-400 font-bold">{avgLtv}% LTV</span>
                 </div>

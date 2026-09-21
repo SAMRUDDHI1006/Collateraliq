@@ -274,21 +274,21 @@ export default function Home() {
           isWorkbenchView={currentView === 'workbench'}
         />
 
-        <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-slate-950">
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-[#070B12] font-sans">
           {/* VIEW 1: Dashboard */}
           {currentView === 'dashboard' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
+                  <h1 className="text-lg font-heading font-extrabold text-white tracking-tight">
                     Collateral Intelligence &amp; Valuation Reconciliation Engine
                   </h1>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5 font-sans">
                     Institutional 3,000-Case Portfolio &bull; Model-Supported Indicative Valuation vs. Independent Valuer Report Reconciliation
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-700/60 font-semibold">
+                  <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/60 px-2.5 py-1 rounded-full border border-cyan-700/60 font-semibold">
                     22 Mumbai &amp; Thane Regions Indexed
                   </span>
                 </div>
@@ -331,12 +331,12 @@ export default function Home() {
               />
 
               {/* Generate Report Button Bar */}
-              <div className="shrink-0 px-3 py-1.5 bg-slate-950 border-b border-slate-800/80 flex items-center justify-between">
+              <div className="shrink-0 px-3 py-1.5 bg-[#0B111A] border-b border-white/10 flex items-center justify-between font-sans">
                 <div className="flex items-center gap-2 text-[11px] font-mono">
                   <span className={`px-2 py-0.5 rounded font-bold border ${
                     currentCase.isFreshCase
-                      ? 'bg-blue-950 text-blue-300 border-blue-800'
-                      : 'bg-slate-900 text-slate-400 border-slate-700'
+                      ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60'
+                      : 'bg-white/5 text-slate-400 border-white/10'
                   }`}>
                     {currentCase.isFreshCase ? '🔵 Fresh Case (Live)' : '📊 Portfolio Case'}
                   </span>
@@ -346,7 +346,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setIsAnalysisReportOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-cyan-950/40"
                 >
                   <FileBarChart2 className="w-3.5 h-3.5" />
                   <span>Generate Analysis Report</span>

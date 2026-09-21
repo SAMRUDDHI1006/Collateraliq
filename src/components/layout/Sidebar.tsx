@@ -60,25 +60,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // If in workbench view, render sleek collapsible rail
   const railClass = isWorkbenchView
-    ? 'shrink-0 w-14 hover:w-56 transition-all duration-200 bg-slate-900 border-r border-slate-800 flex flex-col justify-between z-20 overflow-x-hidden group select-none'
-    : 'shrink-0 w-56 bg-slate-900 border-r border-slate-800 flex flex-col justify-between z-20 select-none hidden md:flex';
+    ? 'shrink-0 w-14 hover:w-56 transition-all duration-300 bg-[#0B111A] border-r border-white/[0.08] flex flex-col justify-between z-20 overflow-x-hidden group select-none shadow-xl'
+    : 'shrink-0 w-56 bg-[#0B111A] border-r border-white/[0.08] flex flex-col justify-between z-20 select-none hidden md:flex';
 
   return (
     <aside className={railClass}>
-      <div className="p-2.5 space-y-3">
+      <div className="p-3 space-y-4">
         {/* Primary Action Button: + New Loan Case */}
         <button
           onClick={onOpenIntakeModal}
           title="New Loan Case"
-          className="w-full flex items-center justify-start gap-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-2 px-2.5 rounded-lg shadow-md shadow-blue-600/25 transition-all overflow-hidden whitespace-nowrap"
+          className="w-full flex items-center justify-start gap-2.5 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-bold text-xs py-2.5 px-3 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all overflow-hidden whitespace-nowrap cursor-pointer"
         >
-          <PlusCircle className="w-4 h-4 shrink-0" />
-          <span className="truncate">{isWorkbenchView ? 'New Loan Case' : '+ New Loan Case'}</span>
+          <PlusCircle className="w-4 h-4 shrink-0 stroke-[2.5]" />
+          <span className="truncate tracking-tight">{isWorkbenchView ? 'New Case' : '+ New Loan Case'}</span>
         </button>
 
         {/* Navigation Menu */}
         <nav className="space-y-1">
-          <div className="px-2 py-1 text-[10px] uppercase font-bold tracking-wider text-slate-500 truncate">
+          <div className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider text-[#64748B] truncate font-mono">
             Workspaces
           </div>
           {navItems.map((item) => {
@@ -88,24 +88,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.id}
                 onClick={() => onSelectView(item.id)}
                 title={item.label}
-                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap overflow-hidden ${
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 whitespace-nowrap overflow-hidden relative cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600/20 text-blue-300 border border-blue-500/40 font-semibold'
-                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent'
+                    ? 'bg-cyan-500/10 text-cyan-300 font-semibold border border-cyan-500/30 shadow-xs'
+                    : 'text-[#94A3B8] hover:bg-white/[0.04] hover:text-white border border-transparent'
                 }`}
               >
-                <div className="flex items-center gap-2.5 truncate">
-                  <span className={isActive ? 'text-blue-400' : 'text-slate-400'}>
+                {/* Active left indicator */}
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-cyan-400 rounded-r-full shadow-glow-cyan" />
+                )}
+                <div className="flex items-center gap-2.5 truncate pl-1">
+                  <span className={isActive ? 'text-cyan-400' : 'text-[#64748B]'}>
                     {item.icon}
                   </span>
                   <span className="truncate">{item.label}</span>
                 </div>
                 {item.badge !== undefined && (
                   <span
-                    className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-semibold shrink-0 ${
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold shrink-0 ${
                       isActive
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-800 text-slate-400 border border-slate-700'
+                        ? 'bg-cyan-400 text-slate-950'
+                        : 'bg-[#101824] text-[#94A3B8] border border-white/[0.08]'
                     }`}
                   >
                     {item.badge}
@@ -118,11 +122,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Footer Info */}
-      <div className="p-2.5 border-t border-slate-800 bg-slate-950/40 overflow-hidden whitespace-nowrap">
-        <div className="flex items-center gap-2 text-slate-400 text-[11px] font-medium truncate">
-          <Database className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-          <span className="truncate text-slate-400">
-            Dataset: <span className="text-slate-200 font-semibold">3,000 Cases</span>
+      <div className="p-3 border-t border-white/[0.08] bg-[#070B12]/80 overflow-hidden whitespace-nowrap">
+        <div className="flex items-center gap-2 text-[#94A3B8] text-[11px] font-medium truncate">
+          <Database className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span className="truncate text-[#94A3B8]">
+            Dataset: <span className="text-[#F8FAFC] font-semibold font-mono">3,000 Cases</span>
           </span>
         </div>
       </div>
