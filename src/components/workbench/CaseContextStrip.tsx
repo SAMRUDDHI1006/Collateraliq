@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShieldAlert, CheckCircle2, ChevronLeft, Download } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, ChevronLeft } from 'lucide-react';
 import { CollateralAssessmentCase } from '@/types/collateral';
 
 interface CaseContextStripProps {
@@ -49,16 +49,6 @@ export const CaseContextStrip: React.FC<CaseContextStripProps> = ({
           <span>Model Indicative: <strong className="text-emerald-400">₹{(modelIndicativeValue / 1e7).toFixed(3)} Cr</strong></span>
           <span>LTV: <strong className="text-cyan-400">{ltv.toFixed(1)}%</strong></span>
         </div>
-
-        <a
-          href="/api/pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-300 hover:text-white px-2.5 py-1 rounded-lg bg-[#141E2B] border border-white/[0.08] hover:border-cyan-500/40 transition-colors shrink-0 font-semibold cursor-pointer shadow-xs"
-        >
-          <Download className="w-3 h-3 text-cyan-400" />
-          <span>PDF Report</span>
-        </a>
 
         {/* Status Pill */}
         <div
