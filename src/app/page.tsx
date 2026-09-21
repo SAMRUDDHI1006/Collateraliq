@@ -16,12 +16,13 @@ import { NewCaseModal } from '@/components/intake/NewCaseModal';
 import { ClarificationModal } from '@/components/modals/ClarificationModal';
 import { RejectDocketModal } from '@/components/modals/RejectDocketModal';
 import { SanctionSuccessModal } from '@/components/modals/SanctionSuccessModal';
+import { AnalysisReportModal } from '@/components/modals/AnalysisReportModal';
 import { UserProfileDrawer } from '@/components/layout/UserProfileDrawer';
 import { ValuerQueueView } from '@/components/views/ValuerQueueView';
 import { AuditLogsView } from '@/components/views/AuditLogsView';
 import { CollateralAssessmentCase } from '@/types/collateral';
 import { useCaseStore } from '@/context/CaseContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FileBarChart2 } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function Home() {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<boolean>(false);
   const [isSanctionSuccessModalOpen, setIsSanctionSuccessModalOpen] = useState<boolean>(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState<boolean>(false);
+  const [isAnalysisReportOpen, setIsAnalysisReportOpen] = useState<boolean>(false);
 
   // Filtered 3,000 cases list derived dynamically
   const filteredCases = useMemo(() => {
@@ -128,7 +130,11 @@ export default function Home() {
   };
 
   const handleCaseCreated = (newCase: CollateralAssessmentCase) => {
-    addCase(newCase);
+    // Fresh cases (CLIQ-LIVE-2026-XXXX) are NOT added to the 3,000-case portfolio.
+    // Only save to portfolio if it's not a fresh case (for future "Save to Portfolio" feature).
+    if (!newCase.isFreshCase) {
+      addCase(newCase);
+    }
     setSelectedCaseId(newCase.caseId);
     setCurrentCase(newCase);
     setExceptionAcknowledged(false);
@@ -324,6 +330,29 @@ export default function Home() {
                 onBackToDashboard={() => setCurrentView('dashboard')}
               />
 
+              {/* Generate Report Button Bar */}
+              <div className="shrink-0 px-3 py-1.5 bg-slate-950 border-b border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[11px] font-mono">
+                  <span className={`px-2 py-0.5 rounded font-bold border ${
+                    currentCase.isFreshCase
+                      ? 'bg-blue-950 text-blue-300 border-blue-800'
+                      : 'bg-slate-900 text-slate-400 border-slate-700'
+                  }`}>
+                    {currentCase.isFreshCase ? '🔵 Fresh Case (Live)' : '📊 Portfolio Case'}
+                  </span>
+                  {currentCase.isFreshCase && (
+                    <span className="text-slate-500">Not saved to 3,000-case portfolio</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsAnalysisReportOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-md"
+                >
+                  <FileBarChart2 className="w-3.5 h-3.5" />
+                  <span>Generate Analysis Report</span>
+                </button>
+              </div>
+
               <div className="flex-1 grid grid-cols-12 gap-2.5 p-2.5 overflow-hidden min-h-0">
                 <div className="col-span-12 lg:col-span-4 h-full min-h-0">
                   <DocumentViewer loanCase={currentCase} />
@@ -409,6 +438,12 @@ export default function Home() {
             onClose={() => setIsSanctionSuccessModalOpen(false)}
             loanCase={currentCase}
             onViewAuditTrail={() => setCurrentView('audit_logs')}
+          />
+
+          <AnalysisReportModal
+            isOpen={isAnalysisReportOpen}
+            onClose={() => setIsAnalysisReportOpen(false)}
+            loanCase={currentCase}
           />
         </>
       )}

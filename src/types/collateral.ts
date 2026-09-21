@@ -48,12 +48,23 @@ export interface ValuerReportData {
 export interface BalanceTransferData {
   isBalanceTransfer: boolean;
   previousLender?: string;
+  // Existing loan details
   originalLoanAmount?: number;
   outstandingBalance?: number;
   existingEmi?: number;
   existingInterestRate?: number;
+  loanStartDate?: string;
+  remainingTenure?: number; // in months
+  previousLoanAccountRef?: string;
+  // Previous valuation (Option A: Manual entry)
   previousValuation?: number;
   previousValuationDate?: string;
+  previousRatePerSqFt?: number;
+  previousAreaConsidered?: number;
+  previousValuationMethod?: string;
+  previousValuerName?: string;
+  // Option B: PDF-extracted (same fields, populated from AI extraction)
+  previousValuationSource?: 'manual' | 'pdf_extracted';
 }
 
 export interface DeviationMetrics {
@@ -116,6 +127,9 @@ export interface CollateralAssessmentCase {
   reviewDrivers: string[];
   status: CaseStatus;
   createdAt?: string;
+  // Fresh case flags
+  isFreshCase?: boolean;
+  freshCaseId?: string;
 }
 
 export interface LocalityBenchmark {

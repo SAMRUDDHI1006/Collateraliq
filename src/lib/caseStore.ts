@@ -357,8 +357,20 @@ export function generate3000Cases(): CollateralAssessmentCase[] {
 }
 
 const STORAGE_KEY = 'collateraliq_3000_cases_v3';
+const FRESH_CASE_COUNTER_KEY = 'collateraliq_fresh_case_counter';
 
 export const SEED_CASES: CollateralAssessmentCase[] = generate3000Cases();
+
+/** Generate a sequential fresh case ID: CLIQ-LIVE-2026-0001, 0002, etc. */
+export function generateFreshCaseId(): string {
+  if (typeof window === 'undefined') {
+    return `CLIQ-LIVE-2026-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
+  }
+  const current = parseInt(localStorage.getItem(FRESH_CASE_COUNTER_KEY) || '0', 10);
+  const next = current + 1;
+  localStorage.setItem(FRESH_CASE_COUNTER_KEY, String(next));
+  return `CLIQ-LIVE-2026-${String(next).padStart(4, '0')}`;
+}
 
 export function getStoredCases(): CollateralAssessmentCase[] {
   if (typeof window === 'undefined') {
@@ -407,17 +419,21 @@ export function processNewCase(payload: {
   valuerReport?: any;
   balanceTransfer?: any;
 }): CollateralAssessmentCase {
-  const location = payload.propertyProfile.location || 'Dadar West';
-  const carpetArea = payload.propertyProfile.carpetArea || 850;
+  const location = payload.propertyProfile?.location || 'Dadar West';
+  const carpetArea = Number(payload.propertyProfile?.carpetArea) || 850;
   const benchmarkRate = BENCHMARKS[location] || 35000;
 
   const modelIndicativeValue = Math.round(carpetArea * benchmarkRate);
   const minRange = Math.round(modelIndicativeValue * 0.95);
   const maxRange = Math.round(modelIndicativeValue * 1.05);
 
-  const valuerAssessedValue = payload.valuerReport?.assessedValue || modelIndicativeValue;
+  const valuerAssessedValue = payload.valuerReport?.assessedValue
+    ? Number(payload.valuerReport.assessedValue)
+    : modelIndicativeValue;
   const absoluteDiff = Math.abs(valuerAssessedValue - modelIndicativeValue);
-  const percentageDiff = Number(((valuerAssessedValue - modelIndicativeValue) / modelIndicativeValue * 100).toFixed(2));
+  const percentageDiff = modelIndicativeValue > 0
+    ? Number(((valuerAssessedValue - modelIndicativeValue) / modelIndicativeValue * 100).toFixed(2))
+    : 0;
 
   let reviewLevel: ReviewLevel = 'LOW';
   if (Math.abs(percentageDiff) > 8.0) {
@@ -426,40 +442,58 @@ export function processNewCase(payload: {
     reviewLevel = 'MEDIUM';
   }
 
-  const caseId = `CLIQ-NEW-${Math.floor(1000 + Math.random() * 9000)}`;
+  // Fresh case ID — NEVER added to portfolio, stays at 3,000
+  const freshCaseId = generateFreshCaseId();
+
+  const valuerRate = valuerAssessedValue > 0 ? Math.round(valuerAssessedValue / carpetArea) : benchmarkRate;
+  const today = new Date().toISOString().split('T')[0];
+  const bhk = payload.propertyProfile?.bhk || '2 BHK';
 
   const createdCase: CollateralAssessmentCase = {
-    caseId,
-    borrowerName: payload.borrowerName,
+    caseId: freshCaseId,
+    freshCaseId,
+    isFreshCase: true,
+    borrowerName: payload.borrowerName || 'New Applicant',
     borrower: payload.borrower,
     product: payload.product,
     loanPurpose: payload.loanPurpose,
-    loanFacilityRequested: payload.loanFacilityRequested,
+    loanFacilityRequested: Number(payload.loanFacilityRequested) || 20000000,
     tenureYears: payload.tenureYears,
     interestRate: payload.interestRate,
     propertyProfile: {
-      ...payload.propertyProfile,
+      location,
       city: location.includes('Thane') ? 'Thane' : 'Mumbai',
+      address: payload.propertyProfile?.address || '',
+      pinCode: payload.propertyProfile?.pinCode || '',
+      propertyType: payload.propertyProfile?.propertyType || 'Apartment',
+      bhk,
+      carpetArea,
+      builtUpArea: payload.propertyProfile?.builtUpArea,
+      floor: Number(payload.propertyProfile?.floor) || 1,
+      totalFloors: payload.propertyProfile?.totalFloors,
+      buildingAge: Number(payload.propertyProfile?.buildingAge) || 5,
+      parking: payload.propertyProfile?.parking || 'Open Parking',
+      occupancy: payload.propertyProfile?.occupancy || 'Self-occupied',
     },
     modelIndicativeValue,
     indicativeRange: { min: minRange, max: maxRange },
     valuationConfidence: 'High',
     comparables: [
-      { project: `${location} Prime`, bhk: payload.propertyProfile.bhk || '2 BHK', ratePerSqFt: benchmarkRate, distance: '0.1 km' },
-      { project: `${location} Heights`, bhk: payload.propertyProfile.bhk || '2 BHK', ratePerSqFt: Math.round(benchmarkRate * 0.99), distance: '0.3 km' },
-      { project: `${location} Park`, bhk: payload.propertyProfile.bhk || '2 BHK', ratePerSqFt: Math.round(benchmarkRate * 1.01), distance: '0.5 km' },
+      { project: `${location} Prime Residency`, bhk, ratePerSqFt: benchmarkRate, distance: '0.1 km' },
+      { project: `${location} Heights`, bhk, ratePerSqFt: Math.round(benchmarkRate * 0.985), distance: '0.3 km' },
+      { project: `${location} Park View`, bhk, ratePerSqFt: Math.round(benchmarkRate * 1.015), distance: '0.5 km' },
     ],
     valuerReport: payload.valuerReport ? {
       valuerName: payload.valuerReport.valuerName || 'Empaneled IBBI Valuer',
       assessedValue: valuerAssessedValue,
-      areaConsidered: carpetArea,
-      rateApplied: Math.round(valuerAssessedValue / carpetArea),
-      inspectionDate: payload.valuerReport.inspectionDate || new Date().toISOString().split('T')[0],
+      areaConsidered: payload.valuerReport.areaConsidered || carpetArea,
+      rateApplied: valuerRate,
+      inspectionDate: payload.valuerReport.inspectionDate || today,
       conditionRating: payload.valuerReport.conditionRating || 'Good',
       marketability: 'High Liquidity',
-      valuationMethod: 'Sales Comparison Approach',
-      comparablesUsedCount: 3,
-      comparablesAvgRate: benchmarkRate,
+      valuationMethod: payload.valuerReport.valuationMethod || 'Sales Comparison Approach',
+      comparablesUsedCount: payload.valuerReport.comparablesUsedCount || 3,
+      comparablesAvgRate: payload.valuerReport.comparablesAvgRate || benchmarkRate,
       adjustmentsNote: payload.valuerReport.adjustmentsNote,
     } : undefined,
     deviation: {
@@ -467,29 +501,50 @@ export function processNewCase(payload: {
       percentageDiff,
       effectiveRate: {
         modelRate: benchmarkRate,
-        valuerRate: Math.round(valuerAssessedValue / carpetArea),
-        diffPerSqFt: Math.round(valuerAssessedValue / carpetArea) - benchmarkRate,
+        valuerRate,
+        diffPerSqFt: valuerRate - benchmarkRate,
       },
-      comparablesCount: { modelCount: 3, valuerCount: 3 },
-      avgComparableRate: { modelAvg: benchmarkRate, valuerAvg: benchmarkRate },
-      areaUsed: { modelArea: carpetArea, valuerArea: carpetArea },
-      valuationDate: { modelDate: new Date().toISOString().split('T')[0], valuerDate: payload.valuerReport?.inspectionDate || new Date().toISOString().split('T')[0] },
-      methodology: { modelMethod: 'AI Comparable Model', valuerMethod: 'Sales Comparison Approach' },
+      comparablesCount: {
+        modelCount: 3,
+        valuerCount: payload.valuerReport?.comparablesUsedCount || 3,
+      },
+      avgComparableRate: {
+        modelAvg: benchmarkRate,
+        valuerAvg: payload.valuerReport?.comparablesAvgRate || benchmarkRate,
+      },
+      areaUsed: {
+        modelArea: carpetArea,
+        valuerArea: payload.valuerReport?.areaConsidered || carpetArea,
+      },
+      valuationDate: {
+        modelDate: today,
+        valuerDate: payload.valuerReport?.inspectionDate || today,
+      },
+      methodology: {
+        modelMethod: 'AI Comparable-based Valuation Model',
+        valuerMethod: payload.valuerReport?.valuationMethod || 'Sales Comparison Approach',
+      },
       explicitAdjustments: payload.valuerReport?.adjustmentsNote || 'No explicit adjustments noted',
       explanationConfidence: 'High',
-      explanationText: `Indicative valuation ₹${(modelIndicativeValue / 1e7).toFixed(2)} Cr vs valuer report ₹${(valuerAssessedValue / 1e7).toFixed(2)} Cr (${percentageDiff}% variance).`,
-      identifiedDrivers: [`Effective Rate Difference`, `Review Level Classification (${reviewLevel})`],
+      explanationText: `CollateralIQ indicative value ₹${(modelIndicativeValue / 1e7).toFixed(3)} Cr vs independent valuer ₹${(valuerAssessedValue / 1e7).toFixed(3)} Cr (${percentageDiff > 0 ? '+' : ''}${percentageDiff}% deviation). Primary driver: effective rate ₹${benchmarkRate.toLocaleString()}/sq.ft (model) vs ₹${valuerRate.toLocaleString()}/sq.ft (valuer) on ${carpetArea} sq.ft carpet area.`,
+      identifiedDrivers: [
+        `Effective Rate Difference (${valuerRate - benchmarkRate > 0 ? '+' : ''}₹${(valuerRate - benchmarkRate).toLocaleString()}/sq.ft)`,
+        `Review Level Classification (${reviewLevel})`,
+        ...(Math.abs(percentageDiff) > 3 ? [`Deviation Exceeds 3% Threshold (${percentageDiff > 0 ? '+' : ''}${percentageDiff}%)`] : []),
+      ],
     },
-    balanceTransfer: payload.balanceTransfer,
+    balanceTransfer: payload.balanceTransfer || { isBalanceTransfer: false },
     reviewLevel,
     reviewDrivers: [
-      `Valuation Deviation (${percentageDiff}%)`,
+      `Valuation Deviation (${percentageDiff > 0 ? '+' : ''}${percentageDiff}%)`,
+      `LTV Analysis Required`,
       `Review Priority (${reviewLevel})`,
     ],
     status: 'ACTIVE',
     createdAt: new Date().toISOString(),
   };
 
-  saveNewCase(createdCase);
+  // NOTE: Fresh cases (CLIQ-LIVE-2026-XXXX) are NOT saved to the 3,000-case portfolio.
+  // The 3,000-case portfolio baseline stays clean and unchanged.
   return createdCase;
 }
