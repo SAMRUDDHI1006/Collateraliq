@@ -45,16 +45,35 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       };
 
       const absDiff = Math.abs(assessedVal - item.modelIndicativeValue);
-      const pctDiff = Number(((absDiff / item.modelIndicativeValue) * 100).toFixed(1));
+      const pctDiff = Number(((assessedVal - item.modelIndicativeValue) / item.modelIndicativeValue * 100).toFixed(2));
+      const modelRate = Math.round(item.modelIndicativeValue / item.propertyProfile.carpetArea);
 
       item.deviation = {
         absoluteDiff: absDiff,
         percentageDiff: pctDiff,
+        effectiveRate: {
+          modelRate,
+          valuerRate,
+          diffPerSqFt: valuerRate - modelRate,
+        },
+        comparablesCount: { modelCount: 3, valuerCount: 3 },
+        avgComparableRate: { modelAvg: modelRate, valuerAvg: valuerRate },
+        areaUsed: { modelArea: item.propertyProfile.carpetArea, valuerArea: item.propertyProfile.carpetArea },
+        valuationDate: { modelDate: new Date().toISOString().split('T')[0], valuerDate: new Date().toISOString().split('T')[0] },
+        methodology: { modelMethod: 'AI Comparable Model', valuerMethod: 'Sales Comparison Approach' },
+        explicitAdjustments: body.valuer_override_reason || 'Valuer adjustment applied',
+        explanationConfidence: 'High',
+        explanationText: `Valuer assessed value updated to ₹${(assessedVal / 1e7).toFixed(3)} Cr (${pctDiff}% variance).`,
         identifiedDrivers: [body.valuer_override_reason || 'Valuer Subjective Calibration'],
-        requiresManualReview: pctDiff > 10,
       };
 
-      item.status = pctDiff > 10 ? 'REVIEWED' : 'VALUER_LINKED';
+      if (Math.abs(pctDiff) > 8.0) {
+        item.reviewLevel = 'HIGH';
+      } else if (Math.abs(pctDiff) > 3.0) {
+        item.reviewLevel = 'MEDIUM';
+      } else {
+        item.reviewLevel = 'LOW';
+      }
 
       addAuditLog({
         case_id: item.caseId,

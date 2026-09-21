@@ -1,5 +1,5 @@
 import { BenchmarksData, CollateralAssessmentCase, AuditLogItem } from '@/types/collateral';
-import { SEED_CASES, BENCHMARKS, getStoredCases } from './caseStore';
+import { BENCHMARKS, REGIONS_22, getStoredCases } from './caseStore';
 
 const AUDIT_LOGS_STORE: AuditLogItem[] = [
   {
@@ -11,7 +11,7 @@ const AUDIT_LOGS_STORE: AuditLogItem[] = [
     action_type: 'INITIAL_TRIAGE',
     description: 'System ingestion executed. Model indicative valuation generated at INR 4.675 Cr. Valuer report linked.',
     previous_state: 'Unprocessed',
-    new_state: 'VALUER_LINKED',
+    new_state: 'ACTIVE',
   },
   {
     id: 'AUD-1002',
@@ -20,9 +20,9 @@ const AUDIT_LOGS_STORE: AuditLogItem[] = [
     officer_name: 'P. Deshmukh',
     officer_role: 'Empaneled IBBI Valuer',
     action_type: 'PHYSICAL_INSPECTION_UPDATE',
-    description: 'Physical inspection completed by P. V. Kulkarni & Associates. Assessed value matches model baseline at INR 4.675 Cr.',
-    previous_state: 'Inspection Scheduled',
-    new_state: 'VALUER_LINKED',
+    description: 'Physical inspection completed by P. V. Kulkarni & Associates. Assessed value recorded at INR 4.55 Cr (-2.67% deviation).',
+    previous_state: 'Pending Valuation',
+    new_state: 'ACTIVE',
   },
   {
     id: 'AUD-1003',
@@ -33,24 +33,33 @@ const AUDIT_LOGS_STORE: AuditLogItem[] = [
     action_type: 'INITIAL_TRIAGE',
     description: 'Balance transfer case loaded from Thane West branch with HDFC Bank outstanding balance of INR 1.95 Cr.',
     previous_state: 'Pending',
-    new_state: 'VALUER_LINKED',
+    new_state: 'ACTIVE',
   },
 ];
 
 export function getBenchmarks(): BenchmarksData {
+  const locality_benchmarks: Record<string, any> = {};
+  REGIONS_22.forEach((region) => {
+    const rate = BENCHMARKS[region] || 35000;
+    locality_benchmarks[region] = {
+      locality: region,
+      city: region.includes('Thane') ? 'Thane' : 'Mumbai',
+      benchmark_rate_inr_sqft: rate,
+      dataset_avg_rate: rate,
+      min_rate: Math.round(rate * 0.92),
+      max_rate: Math.round(rate * 1.08),
+      sample_count: 135,
+    };
+  });
+
+  const cases = getStoredCases();
+
   return {
     generated_at: new Date().toISOString(),
-    dataset_version: 'v2.4-Intelligence-Reconciliation',
-    locality_benchmarks: {
-      'Dadar West': { locality: 'Dadar West', city: 'Mumbai', benchmark_rate_inr_sqft: 55000, dataset_avg_rate: 55000, min_rate: 52000, max_rate: 58000, sample_count: 140 },
-      'Andheri West': { locality: 'Andheri West', city: 'Mumbai', benchmark_rate_inr_sqft: 46200, dataset_avg_rate: 46200, min_rate: 43000, max_rate: 49000, sample_count: 210 },
-      'Bandra East': { locality: 'Bandra East', city: 'Mumbai', benchmark_rate_inr_sqft: 58000, dataset_avg_rate: 58000, min_rate: 54000, max_rate: 62000, sample_count: 95 },
-      'Thane West': { locality: 'Thane West', city: 'Thane', benchmark_rate_inr_sqft: 28500, dataset_avg_rate: 28500, min_rate: 26000, max_rate: 31000, sample_count: 320 },
-      'Borivali West': { locality: 'Borivali West', city: 'Mumbai', benchmark_rate_inr_sqft: 34000, dataset_avg_rate: 34000, min_rate: 31000, max_rate: 36500, sample_count: 180 },
-      'Kurla West': { locality: 'Kurla West', city: 'Mumbai', benchmark_rate_inr_sqft: 22000, dataset_avg_rate: 22000, min_rate: 20000, max_rate: 24500, sample_count: 150 },
-    },
-    top_cases: getStoredCases(),
-    all_cases_count: getStoredCases().length,
+    dataset_version: 'v3.0-3000-Cases-Master-Engine',
+    locality_benchmarks,
+    top_cases: cases.slice(0, 50),
+    all_cases_count: cases.length,
   };
 }
 
@@ -89,38 +98,45 @@ export function calculateRealtimeValuation(params: {
 
   let deviationPercentage = 0;
   let absoluteDiff = 0;
-  let requiresManualReview = false;
+  let reviewLevel: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
 
   if (params.valuerAssessedValue && params.valuerAssessedValue > 0) {
     absoluteDiff = Math.abs(params.valuerAssessedValue - modelIndicativeValue);
-    deviationPercentage = Number(((absoluteDiff / modelIndicativeValue) * 100).toFixed(1));
-    requiresManualReview = deviationPercentage > 10.0;
+    deviationPercentage = Number(((params.valuerAssessedValue - modelIndicativeValue) / modelIndicativeValue * 100).toFixed(2));
+    if (Math.abs(deviationPercentage) > 8.0) {
+      reviewLevel = 'HIGH';
+    } else if (Math.abs(deviationPercentage) > 3.0) {
+      reviewLevel = 'MEDIUM';
+    }
   }
 
   return {
     modelIndicativeValue,
-    minRange,
-    maxRange,
-    benchmarkRate,
+    indicativeRange: { min: minRange, max: maxRange },
     ltvPercent,
     collateralCoverage,
     deviationPercentage,
     absoluteDiff,
-    requiresManualReview,
+    reviewLevel,
   };
 }
 
-export function getAuditLogs(caseId?: string): AuditLogItem[] {
-  if (!caseId) return AUDIT_LOGS_STORE;
-  return AUDIT_LOGS_STORE.filter((l) => l.case_id.toLowerCase() === caseId.toLowerCase());
-}
-
-export function addAuditLog(entry: Omit<AuditLogItem, 'id' | 'timestamp'>): AuditLogItem {
+export function addAuditLog(logItem: Omit<AuditLogItem, 'id' | 'timestamp'>): AuditLogItem {
   const newItem: AuditLogItem = {
-    ...entry,
-    id: `AUD-${1000 + AUDIT_LOGS_STORE.length + 1}`,
-    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST',
+    ...logItem,
+    id: `AUD-${Math.floor(1000 + Math.random() * 9000)}`,
+    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' IST',
   };
   AUDIT_LOGS_STORE.unshift(newItem);
   return newItem;
 }
+
+export function getAuditLogs(caseId?: string): AuditLogItem[] {
+  if (!caseId) return AUDIT_LOGS_STORE;
+  return AUDIT_LOGS_STORE.filter((log) => log.case_id.toLowerCase() === caseId.toLowerCase());
+}
+
+export function getAuditLogsForCase(caseId: string): AuditLogItem[] {
+  return AUDIT_LOGS_STORE.filter((log) => log.case_id.toLowerCase() === caseId.toLowerCase());
+}
+

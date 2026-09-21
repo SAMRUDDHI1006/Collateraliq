@@ -1,293 +1,495 @@
-export interface PropertyProfile {
-  location: string;
-  propertyType: string;
-  bhk: string;
-  carpetArea: number; // in sq.ft
-  builtUpArea?: number;
-  floor: number;
-  buildingAge: number;
-  parking: string;
-  occupancy: 'Self-occupied' | 'Tenant' | 'Vacant';
-}
+import { CollateralAssessmentCase, LoanProduct, PropertyType, ReviewLevel, CaseStatus } from '@/types/collateral';
 
-export interface ValuerReportData {
-  valuerName: string;
-  assessedValue: number;
-  areaConsidered: number;
-  rateApplied: number;
-  inspectionDate: string;
-  conditionRating: string;
-  marketability: string;
-  adjustmentsNote?: string;
-}
-
-export interface BalanceTransferData {
-  isBalanceTransfer: boolean;
-  previousLender?: string;
-  previousValuation?: number;
-  previousSanctionDate?: string;
-  outstandingBalance?: number;
-}
-
-export interface CollateralAssessmentCase {
-  caseId: string;
-  borrowerName: string;
-  loanFacilityRequested: number;
-  propertyProfile: PropertyProfile;
-  modelIndicativeValue: number;
-  indicativeRange: { min: number; max: number };
-  valuationConfidence: 'High' | 'Medium' | 'Low';
-  comparables: Array<{
-    project: string;
-    bhk: string;
-    ratePerSqFt: number;
-    distance: string;
-  }>;
-  valuerReport?: ValuerReportData;
-  deviation?: {
-    absoluteDiff: number;
-    percentageDiff: number;
-    identifiedDrivers: string[];
-    requiresManualReview: boolean;
-  };
-  balanceTransfer?: BalanceTransferData;
-  status: 'INDICATIVE_READY' | 'VALUER_LINKED' | 'REVIEWED';
-  createdAt?: string;
-}
+export const REGIONS_22 = [
+  'Dadar West',
+  'Andheri West',
+  'Bandra East',
+  'Bandra West',
+  'Thane West',
+  'Borivali West',
+  'Kurla West',
+  'Worli',
+  'Lower Parel',
+  'Juhu',
+  'Goregaon West',
+  'Malad West',
+  'Powai',
+  'Chembur',
+  'Ghatkopar West',
+  'Mulund West',
+  'Santacruz West',
+  'Khar West',
+  'Prabhadevi',
+  'Vile Parle West',
+  'Kandivali West',
+  'Thane East',
+] as const;
 
 export const BENCHMARKS: Record<string, number> = {
   'Dadar West': 55000,
   'Andheri West': 46200,
   'Bandra East': 58000,
+  'Bandra West': 68000,
   'Thane West': 28500,
   'Borivali West': 34000,
   'Kurla West': 22000,
+  'Worli': 78100,
+  'Lower Parel': 62000,
+  'Juhu': 72000,
+  'Goregaon West': 38000,
+  'Malad West': 32000,
+  'Powai': 42000,
+  'Chembur': 36000,
+  'Ghatkopar West': 31000,
+  'Mulund West': 30000,
+  'Santacruz West': 60000,
+  'Khar West': 65000,
+  'Prabhadevi': 59000,
+  'Vile Parle West': 54000,
+  'Kandivali West': 29000,
+  'Thane East': 25000,
 };
 
-const STORAGE_KEY = 'collateraliq_live_cases_v2';
+const FIRST_NAMES = ['Aarav', 'Ananya', 'Rohan', 'Priya', 'Vikram', 'Neha', 'Aditya', 'Siddharth', 'Kavita', 'Rajesh', 'Pooja', 'Amit', 'Sneha', 'Rahul', 'Divya', 'Suresh', 'Meera', 'Karan', 'Tarun', 'Shreya'];
+const LAST_NAMES = ['Sharma', 'Patil', 'Mehta', 'Deshmukh', 'Joshi', 'Kulkarni', 'Shah', 'Verma', 'Nair', 'Gupta', 'Rao', 'Iyer', 'Chaudhari', 'Singh', 'Pawar', 'More', 'Agarwal', 'Bhat', 'Kapoor', 'Tiwari'];
 
-export const SEED_CASES: CollateralAssessmentCase[] = [
-  {
+function pseudoRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+export function generate3000Cases(): CollateralAssessmentCase[] {
+  const cases: CollateralAssessmentCase[] = [];
+
+  // Flagship Demo Case #1: CLIQ-DADAR-001
+  cases.push({
     caseId: 'CLIQ-DADAR-001',
     borrowerName: 'Arjun Mehta',
-    loanFacilityRequested: 25000000,
+    borrower: {
+      fullName: 'Arjun Mehta',
+      age: 42,
+      mobileNumber: '+91 98201 44521',
+      residentialCity: 'Mumbai',
+      employmentType: 'Business Owner',
+      employerOrBusinessName: 'Mehta Industrial Supplies',
+      annualIncome: 4800000,
+      existingMonthlyEmi: 38000,
+      cibilScore: 774,
+    },
+    product: 'LAP',
+    loanPurpose: 'Business Expansion',
+    loanFacilityRequested: 25000000, // ₹2.50 Cr
+    tenureYears: 15,
+    interestRate: 10.75,
     propertyProfile: {
       location: 'Dadar West',
-      propertyType: 'Residential Apartment',
+      city: 'Mumbai',
+      address: 'Flat 702, Shardashram CHS, Bhavani Shankar Road, Dadar West',
+      pinCode: '400028',
+      propertyType: 'Apartment',
       bhk: '2 BHK',
       carpetArea: 850,
       builtUpArea: 1020,
       floor: 7,
+      totalFloors: 10,
       buildingAge: 6,
       parking: '1 Covered Stilt (CP-14)',
       occupancy: 'Self-occupied',
     },
-    modelIndicativeValue: 46750000,
+    modelIndicativeValue: 46750000, // ₹4.675 Cr (850 * 55000)
     indicativeRange: { min: 44412500, max: 49087500 },
     valuationConfidence: 'High',
     comparables: [
       { project: 'Shardashram CHS', bhk: '2 BHK', ratePerSqFt: 55000, distance: '0.1 km' },
       { project: 'Sai Enclave', bhk: '2 BHK', ratePerSqFt: 54200, distance: '0.3 km' },
       { project: 'Kirti Tower', bhk: '2 BHK', ratePerSqFt: 56100, distance: '0.5 km' },
+      { project: 'Omkar Heights', bhk: '2 BHK', ratePerSqFt: 55800, distance: '0.6 km' },
+      { project: 'Dadar Pearl', bhk: '2 BHK', ratePerSqFt: 54900, distance: '0.8 km' },
     ],
     valuerReport: {
       valuerName: 'P. V. Kulkarni & Associates (IBBI Reg: IBBI/RV/02/2019/1104)',
-      assessedValue: 46750000,
+      assessedValue: 45500000, // ₹4.55 Cr
       areaConsidered: 850,
-      rateApplied: 55000,
-      inspectionDate: '2026-09-12',
+      rateApplied: 53529,
+      inspectionDate: '2026-08-25',
       conditionRating: 'Excellent (A+ Structural Grade)',
       marketability: 'High Liquidity Micro-market',
-      adjustmentsNote: 'Rate calibrated to recent registered transaction index in Dadar West corridor.',
+      valuationMethod: 'Sales Comparison Approach',
+      comparablesUsedCount: 3,
+      comparablesAvgRate: 54200,
+      adjustmentsNote: 'Valuer applied slight downward adjustment due to 1-month market date offset.',
     },
     deviation: {
-      absoluteDiff: 0,
-      percentageDiff: 0,
-      identifiedDrivers: ['Location Benchmark Aligned', 'Zero Area Variance', 'Standard Floor Rise (+3%)'],
-      requiresManualReview: false,
+      absoluteDiff: 1250000, // ₹12.50 Lakhs
+      percentageDiff: -2.67, // -2.67%
+      effectiveRate: {
+        modelRate: 55000,
+        valuerRate: 53529,
+        diffPerSqFt: -1471,
+      },
+      comparablesCount: {
+        modelCount: 5,
+        valuerCount: 3,
+      },
+      avgComparableRate: {
+        modelAvg: 55800,
+        valuerAvg: 54200,
+      },
+      areaUsed: {
+        modelArea: 850,
+        valuerArea: 850,
+      },
+      valuationDate: {
+        modelDate: '2026-09-14',
+        valuerDate: '2026-08-25',
+      },
+      methodology: {
+        modelMethod: 'AI Comparable-based Valuation Model',
+        valuerMethod: 'Sales Comparison Approach',
+      },
+      explicitAdjustments: 'Valuer applied minor micro-market timing adjustment.',
+      explanationConfidence: 'High',
+      explanationText: 'The independent valuer reported value is 2.67% below the CollateralIQ estimate. The primary drivers are lower effective rate/sq.ft (-₹1,471/sq.ft) and a smaller comparable set (3 vs 5 comparables). Area used is identical (850 sq.ft).',
+      identifiedDrivers: [
+        'Effective Rate Difference (-₹1,471/sq.ft)',
+        'Comparable Property Selection (3 valuer vs 5 model)',
+        'Valuation Date Offset (1 month gap)',
+      ],
     },
     balanceTransfer: {
       isBalanceTransfer: false,
     },
-    status: 'VALUER_LINKED',
-    createdAt: '2026-09-14T10:30:00Z',
-  },
-  {
-    caseId: 'CLIQ-00002',
-    borrowerName: 'Ananya Patil',
-    loanFacilityRequested: 21700000,
-    propertyProfile: {
-      location: 'Thane West',
-      propertyType: 'Residential Apartment',
-      bhk: '3 BHK',
-      carpetArea: 1380,
-      builtUpArea: 1650,
-      floor: 12,
-      buildingAge: 4,
-      parking: '2 Covered Parking',
-      occupancy: 'Self-occupied',
-    },
-    modelIndicativeValue: 39330000,
-    indicativeRange: { min: 37363500, max: 41296500 },
-    valuationConfidence: 'High',
-    comparables: [
-      { project: 'Raymond Realty Ten X', bhk: '3 BHK', ratePerSqFt: 28500, distance: '0.2 km' },
-      { project: 'Hiranandani Estate', bhk: '3 BHK', ratePerSqFt: 29100, distance: '0.6 km' },
+    reviewLevel: 'MEDIUM',
+    reviewDrivers: [
+      'Valuation Deviation (-2.67%) within standard 5% tolerance corridor',
+      'Comparable property selection differs slightly from AI model baseline',
+      'Valuation date offset of 1 month',
     ],
-    valuerReport: {
-      valuerName: 'Apex Valuation Consultants',
-      assessedValue: 39330000,
-      areaConsidered: 1380,
-      rateApplied: 28500,
-      inspectionDate: '2026-09-13',
-      conditionRating: 'Good (A Grade)',
-      marketability: 'High',
-    },
-    deviation: {
-      absoluteDiff: 0,
-      percentageDiff: 0,
-      identifiedDrivers: ['Micro-market Baseline Match'],
-      requiresManualReview: false,
-    },
-    balanceTransfer: {
-      isBalanceTransfer: true,
-      previousLender: 'HDFC Bank Ltd',
-      previousValuation: 35000000,
-      previousSanctionDate: '2023-04-15',
-      outstandingBalance: 19500000,
-    },
-    status: 'VALUER_LINKED',
-    createdAt: '2026-09-14T11:15:00Z',
-  },
-];
+    status: 'ACTIVE',
+    createdAt: '2026-09-14T10:30:00Z',
+  });
+
+  // Generate Cases #2 to #3000
+  for (let i = 2; i <= 3000; i++) {
+    const r1 = pseudoRandom(i * 1.1);
+    const r2 = pseudoRandom(i * 2.3);
+    const r3 = pseudoRandom(i * 3.7);
+    const r4 = pseudoRandom(i * 4.9);
+    const r5 = pseudoRandom(i * 5.3);
+
+    const caseId = `CLIQ-${String(i).padStart(5, '0')}`;
+    const firstName = FIRST_NAMES[Math.floor(r1 * FIRST_NAMES.length)];
+    const lastName = LAST_NAMES[Math.floor(r2 * LAST_NAMES.length)];
+    const borrowerName = `${firstName} ${lastName}`;
+
+    const region = REGIONS_22[Math.floor(r3 * REGIONS_22.length)];
+    const city = region.includes('Thane') ? 'Thane' : 'Mumbai';
+    const benchmarkRate = BENCHMARKS[region] || 35000;
+
+    // Product distribution: Home Loan ~40%, LAP ~35%, Balance Transfer ~25%
+    let product: LoanProduct = 'Home Loan';
+    let isBT = false;
+    if (r4 < 0.40) {
+      product = 'Home Loan';
+    } else if (r4 < 0.75) {
+      product = 'LAP';
+    } else {
+      product = 'Balance Transfer';
+      isBT = true;
+    }
+
+    const propTypes: PropertyType[] = ['Apartment', 'Apartment', 'Apartment', 'Independent House', 'Bungalow', 'Villa'];
+    const propertyType = propTypes[Math.floor(r5 * propTypes.length)];
+    const bhks = ['1 BHK', '2 BHK', '2 BHK', '3 BHK', '3 BHK', '4 BHK'];
+    const bhk = bhks[Math.floor(r1 * bhks.length)];
+
+    const carpetArea = Math.round(500 + r2 * 1500); // 500 to 2000 sq.ft
+    const builtUpArea = Math.round(carpetArea * (1.18 + r3 * 0.1));
+    const modelIndicativeValue = Math.round(carpetArea * benchmarkRate);
+    const indicativeMin = Math.round(modelIndicativeValue * 0.95);
+    const indicativeMax = Math.round(modelIndicativeValue * 1.05);
+
+    // LTV range 35% to 78%
+    const targetLtv = 0.35 + r4 * 0.43;
+    const loanFacilityRequested = Math.min(
+      150000000,
+      Math.max(2500000, Math.round((modelIndicativeValue * targetLtv) / 100000) * 100000)
+    );
+
+    // Valuer assessed value with deviation (-12% to +8%)
+    const devFactor = -0.12 + r5 * 0.20;
+    const valuerAssessedValue = Math.round(modelIndicativeValue * (1 + devFactor));
+    const absoluteDiff = Math.abs(valuerAssessedValue - modelIndicativeValue);
+    const percentageDiff = Number(((valuerAssessedValue - modelIndicativeValue) / modelIndicativeValue * 100).toFixed(2));
+
+    // Review level logic
+    let reviewLevel: ReviewLevel = 'LOW';
+    if (Math.abs(percentageDiff) > 8.0 || targetLtv > 0.70) {
+      reviewLevel = 'HIGH';
+    } else if (Math.abs(percentageDiff) > 3.5 || targetLtv > 0.55) {
+      reviewLevel = 'MEDIUM';
+    }
+
+    const statuses: CaseStatus[] = ['ACTIVE', 'ACTIVE', 'ACTIVE', 'COMPLETED', 'PENDING_VALUATION'];
+    const status = statuses[Math.floor(r2 * statuses.length)];
+
+    const valuerRate = Math.round(valuerAssessedValue / carpetArea);
+
+    let btData: any = { isBalanceTransfer: false };
+    if (isBT) {
+      const prevLenders = ['HDFC Bank', 'ICICI Bank', 'SBI Home Loans', 'Axis Bank', 'Kotak Mahindra Bank', 'Bajaj Housing Finance'];
+      const prevLender = prevLenders[Math.floor(r1 * prevLenders.length)];
+      const prevValuation = Math.round(modelIndicativeValue * (0.85 + r3 * 0.15));
+      const outstandingBalance = Math.round(loanFacilityRequested * 0.92);
+      btData = {
+        isBalanceTransfer: true,
+        previousLender: prevLender,
+        originalLoanAmount: Math.round(loanFacilityRequested * 1.1),
+        outstandingBalance: outstandingBalance,
+        existingEmi: Math.round(outstandingBalance * 0.011),
+        existingInterestRate: 9.25,
+        previousValuation: prevValuation,
+        previousValuationDate: '2024-03-15',
+      };
+    }
+
+    cases.push({
+      caseId,
+      borrowerName,
+      borrower: {
+        fullName: borrowerName,
+        age: Math.floor(28 + r1 * 32),
+        residentialCity: city,
+        employmentType: r2 > 0.5 ? 'Salaried' : 'Business Owner',
+        annualIncome: Math.round(1200000 + r3 * 6000000),
+        existingMonthlyEmi: Math.round(15000 + r4 * 50000),
+        cibilScore: Math.floor(700 + r5 * 120),
+      },
+      product,
+      loanPurpose: isBT ? 'Balance Transfer' : (product === 'Home Loan' ? 'Home Purchase' : 'Business Expansion'),
+      loanFacilityRequested,
+      tenureYears: 15 + Math.floor(r1 * 10),
+      interestRate: product === 'Home Loan' ? 8.5 : 10.5,
+      propertyProfile: {
+        location: region,
+        city,
+        address: `Flat ${Math.floor(100 + r2 * 900)}, Landmark Tower, ${region}`,
+        pinCode: region.includes('Thane') ? '400601' : '400001',
+        propertyType,
+        bhk,
+        carpetArea,
+        builtUpArea,
+        floor: Math.floor(1 + r3 * 15),
+        totalFloors: Math.floor(15 + r4 * 10),
+        buildingAge: Math.floor(1 + r5 * 20),
+        parking: r1 > 0.3 ? '1 Covered' : 'Open Parking',
+        occupancy: r2 > 0.3 ? 'Self-occupied' : 'Tenant',
+      },
+      modelIndicativeValue,
+      indicativeRange: { min: indicativeMin, max: indicativeMax },
+      valuationConfidence: r3 > 0.3 ? 'High' : 'Medium',
+      comparables: [
+        { project: `${region} Heights`, bhk, ratePerSqFt: benchmarkRate, distance: '0.2 km' },
+        { project: `${region} Enclave`, bhk, ratePerSqFt: Math.round(benchmarkRate * 0.98), distance: '0.4 km' },
+        { project: `${region} Residency`, bhk, ratePerSqFt: Math.round(benchmarkRate * 1.02), distance: '0.6 km' },
+      ],
+      valuerReport: {
+        valuerName: `${lastName} & Associates Valuers (IBBI Reg)`,
+        assessedValue: valuerAssessedValue,
+        areaConsidered: carpetArea,
+        rateApplied: valuerRate,
+        inspectionDate: '2026-08-28',
+        conditionRating: r4 > 0.4 ? 'Good' : 'Average',
+        marketability: 'Moderate to High Liquidity',
+        valuationMethod: 'Sales Comparison Approach',
+        comparablesUsedCount: 3,
+        comparablesAvgRate: Math.round(benchmarkRate * 0.99),
+        adjustmentsNote: 'Valuer applied standard micro-market adjustments.',
+      },
+      deviation: {
+        absoluteDiff,
+        percentageDiff,
+        effectiveRate: {
+          modelRate: benchmarkRate,
+          valuerRate,
+          diffPerSqFt: valuerRate - benchmarkRate,
+        },
+        comparablesCount: {
+          modelCount: 3,
+          valuerCount: 3,
+        },
+        avgComparableRate: {
+          modelAvg: benchmarkRate,
+          valuerAvg: Math.round(benchmarkRate * 0.99),
+        },
+        areaUsed: {
+          modelArea: carpetArea,
+          valuerArea: carpetArea,
+        },
+        valuationDate: {
+          modelDate: '2026-09-14',
+          valuerDate: '2026-08-28',
+        },
+        methodology: {
+          modelMethod: 'AI Comparable-based Model',
+          valuerMethod: 'Sales Comparison Approach',
+        },
+        explicitAdjustments: 'Standard market adjustment applied.',
+        explanationConfidence: 'High',
+        explanationText: `Independent valuer reported value is ${percentageDiff}% relative to CollateralIQ estimate. Primary driver is effective rate per sq.ft variance (${valuerRate - benchmarkRate > 0 ? '+' : ''}₹${valuerRate - benchmarkRate}/sq.ft).`,
+        identifiedDrivers: [
+          `Effective Rate Variance (${valuerRate - benchmarkRate > 0 ? '+' : ''}₹${valuerRate - benchmarkRate}/sq.ft)`,
+          `LTV Exposure (${(targetLtv * 100).toFixed(1)}%)`,
+        ],
+      },
+      balanceTransfer: btData,
+      reviewLevel,
+      reviewDrivers: [
+        `Valuation Deviation (${percentageDiff}%)`,
+        `LTV Exposure (${(targetLtv * 100).toFixed(1)}%)`,
+      ],
+      status,
+      createdAt: `2026-09-${String(Math.floor(1 + r1 * 18)).padStart(2, '0')}T10:00:00Z`,
+    });
+  }
+
+  return cases;
+}
+
+const STORAGE_KEY = 'collateraliq_3000_cases_v3';
+
+export const SEED_CASES: CollateralAssessmentCase[] = generate3000Cases();
 
 export function getStoredCases(): CollateralAssessmentCase[] {
-  if (typeof window === 'undefined') return SEED_CASES;
+  if (typeof window === 'undefined') {
+    return SEED_CASES;
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_CASES));
       return SEED_CASES;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length >= 3000) {
+      return parsed;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_CASES));
+    return SEED_CASES;
   } catch (err) {
-    console.error('Failed to read cases from storage', err);
+    console.error('Error reading caseStore:', err);
     return SEED_CASES;
   }
 }
 
 export function saveNewCase(newCase: CollateralAssessmentCase): CollateralAssessmentCase[] {
-  const existing = getStoredCases();
-  const updated = [newCase, ...existing.filter((c) => c.caseId !== newCase.caseId)];
-  try {
-    if (typeof window !== 'undefined') {
+  const current = getStoredCases();
+  const updated = [newCase, ...current];
+  if (typeof window !== 'undefined') {
+    try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving new case:', e);
     }
-  } catch (err) {
-    console.error('Failed to persist case to storage', err);
   }
   return updated;
 }
 
 export function processNewCase(payload: {
   borrowerName: string;
-  location: string;
-  propertyType: string;
-  bhk: string;
-  carpetArea: number;
-  builtUpArea?: number;
-  floor: number;
-  buildingAge: number;
-  parking: string;
-  occupancy: 'Self-occupied' | 'Tenant' | 'Vacant';
+  borrower?: any;
+  product: LoanProduct;
+  loanPurpose?: string;
   loanFacilityRequested: number;
-  valuerName?: string;
-  valuerAssessedValue?: number;
-  valuerRateApplied?: number;
-  isBalanceTransfer?: boolean;
-  previousLender?: string;
-  previousValuation?: number;
-  outstandingBalance?: number;
+  tenureYears?: number;
+  interestRate?: number;
+  propertyProfile: any;
+  valuerReport?: any;
+  balanceTransfer?: any;
 }): CollateralAssessmentCase {
-  const benchmarkRate = BENCHMARKS[payload.location] || 35000;
-  const modelIndicativeValue = Math.round(payload.carpetArea * benchmarkRate);
+  const location = payload.propertyProfile.location || 'Dadar West';
+  const carpetArea = payload.propertyProfile.carpetArea || 850;
+  const benchmarkRate = BENCHMARKS[location] || 35000;
+
+  const modelIndicativeValue = Math.round(carpetArea * benchmarkRate);
   const minRange = Math.round(modelIndicativeValue * 0.95);
   const maxRange = Math.round(modelIndicativeValue * 1.05);
 
-  let valuerReport: ValuerReportData | undefined = undefined;
-  let deviation: CollateralAssessmentCase['deviation'] = undefined;
+  const valuerAssessedValue = payload.valuerReport?.assessedValue || modelIndicativeValue;
+  const absoluteDiff = Math.abs(valuerAssessedValue - modelIndicativeValue);
+  const percentageDiff = Number(((valuerAssessedValue - modelIndicativeValue) / modelIndicativeValue * 100).toFixed(2));
 
-  if (payload.valuerAssessedValue && payload.valuerAssessedValue > 0) {
-    const rateApplied = payload.valuerRateApplied || Math.round(payload.valuerAssessedValue / payload.carpetArea);
-    valuerReport = {
-      valuerName: payload.valuerName || 'Empaneled Valuer Report',
-      assessedValue: payload.valuerAssessedValue,
-      areaConsidered: payload.carpetArea,
-      rateApplied,
-      inspectionDate: new Date().toISOString().split('T')[0],
-      conditionRating: 'Satisfactory (B+ Structural Grade)',
-      marketability: 'Moderate to High Liquidity',
-    };
-
-    const absoluteDiff = Math.abs(payload.valuerAssessedValue - modelIndicativeValue);
-    const percentageDiff = Number(((absoluteDiff / modelIndicativeValue) * 100).toFixed(1));
-    const drivers: string[] = [];
-
-    if (percentageDiff > 0) {
-      if (payload.floor > 10) drivers.push('High Floor Rise Premium (+4-6%)');
-      if (payload.buildingAge < 3) drivers.push('New Construction Asset Premium');
-      if (payload.buildingAge > 15) drivers.push('Building Age Structural Depreciation (-8%)');
-      if (drivers.length === 0) drivers.push('Valuer Subjective Market Calibration');
-    } else {
-      drivers.push('Model & Valuer Valuation 100% Aligned');
-    }
-
-    deviation = {
-      absoluteDiff,
-      percentageDiff,
-      identifiedDrivers: drivers,
-      requiresManualReview: percentageDiff > 10,
-    };
+  let reviewLevel: ReviewLevel = 'LOW';
+  if (Math.abs(percentageDiff) > 8.0) {
+    reviewLevel = 'HIGH';
+  } else if (Math.abs(percentageDiff) > 3.0) {
+    reviewLevel = 'MEDIUM';
   }
 
-  const balanceTransfer: BalanceTransferData | undefined = payload.isBalanceTransfer
-    ? {
-        isBalanceTransfer: true,
-        previousLender: payload.previousLender,
-        previousValuation: payload.previousValuation,
-        outstandingBalance: payload.outstandingBalance,
-      }
-    : { isBalanceTransfer: false };
+  const caseId = `CLIQ-NEW-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  const newCase: CollateralAssessmentCase = {
-    caseId: `CLIQ-LIVE-${Math.floor(100000 + Math.random() * 900000)}`,
+  const createdCase: CollateralAssessmentCase = {
+    caseId,
     borrowerName: payload.borrowerName,
+    borrower: payload.borrower,
+    product: payload.product,
+    loanPurpose: payload.loanPurpose,
     loanFacilityRequested: payload.loanFacilityRequested,
+    tenureYears: payload.tenureYears,
+    interestRate: payload.interestRate,
     propertyProfile: {
-      location: payload.location,
-      propertyType: payload.propertyType,
-      bhk: payload.bhk,
-      carpetArea: payload.carpetArea,
-      builtUpArea: payload.builtUpArea || Math.round(payload.carpetArea * 1.2),
-      floor: payload.floor,
-      buildingAge: payload.buildingAge,
-      parking: payload.parking,
-      occupancy: payload.occupancy,
+      ...payload.propertyProfile,
+      city: location.includes('Thane') ? 'Thane' : 'Mumbai',
     },
     modelIndicativeValue,
     indicativeRange: { min: minRange, max: maxRange },
     valuationConfidence: 'High',
     comparables: [
-      { project: `${payload.location} Prime Residency`, bhk: payload.bhk, ratePerSqFt: benchmarkRate, distance: '0.2 km' },
-      { project: `${payload.location} Heights CHS`, bhk: payload.bhk, ratePerSqFt: Math.round(benchmarkRate * 0.98), distance: '0.4 km' },
+      { project: `${location} Prime`, bhk: payload.propertyProfile.bhk || '2 BHK', ratePerSqFt: benchmarkRate, distance: '0.1 km' },
+      { project: `${location} Heights`, bhk: payload.propertyProfile.bhk || '2 BHK', ratePerSqFt: Math.round(benchmarkRate * 0.99), distance: '0.3 km' },
+      { project: `${location} Park`, bhk: payload.propertyProfile.bhk || '2 BHK', ratePerSqFt: Math.round(benchmarkRate * 1.01), distance: '0.5 km' },
     ],
-    valuerReport,
-    deviation,
-    balanceTransfer,
-    status: valuerReport ? (deviation?.requiresManualReview ? 'REVIEWED' : 'VALUER_LINKED') : 'INDICATIVE_READY',
+    valuerReport: payload.valuerReport ? {
+      valuerName: payload.valuerReport.valuerName || 'Empaneled IBBI Valuer',
+      assessedValue: valuerAssessedValue,
+      areaConsidered: carpetArea,
+      rateApplied: Math.round(valuerAssessedValue / carpetArea),
+      inspectionDate: payload.valuerReport.inspectionDate || new Date().toISOString().split('T')[0],
+      conditionRating: payload.valuerReport.conditionRating || 'Good',
+      marketability: 'High Liquidity',
+      valuationMethod: 'Sales Comparison Approach',
+      comparablesUsedCount: 3,
+      comparablesAvgRate: benchmarkRate,
+      adjustmentsNote: payload.valuerReport.adjustmentsNote,
+    } : undefined,
+    deviation: {
+      absoluteDiff,
+      percentageDiff,
+      effectiveRate: {
+        modelRate: benchmarkRate,
+        valuerRate: Math.round(valuerAssessedValue / carpetArea),
+        diffPerSqFt: Math.round(valuerAssessedValue / carpetArea) - benchmarkRate,
+      },
+      comparablesCount: { modelCount: 3, valuerCount: 3 },
+      avgComparableRate: { modelAvg: benchmarkRate, valuerAvg: benchmarkRate },
+      areaUsed: { modelArea: carpetArea, valuerArea: carpetArea },
+      valuationDate: { modelDate: new Date().toISOString().split('T')[0], valuerDate: payload.valuerReport?.inspectionDate || new Date().toISOString().split('T')[0] },
+      methodology: { modelMethod: 'AI Comparable Model', valuerMethod: 'Sales Comparison Approach' },
+      explicitAdjustments: payload.valuerReport?.adjustmentsNote || 'No explicit adjustments noted',
+      explanationConfidence: 'High',
+      explanationText: `Indicative valuation ₹${(modelIndicativeValue / 1e7).toFixed(2)} Cr vs valuer report ₹${(valuerAssessedValue / 1e7).toFixed(2)} Cr (${percentageDiff}% variance).`,
+      identifiedDrivers: [`Effective Rate Difference`, `Review Level Classification (${reviewLevel})`],
+    },
+    balanceTransfer: payload.balanceTransfer,
+    reviewLevel,
+    reviewDrivers: [
+      `Valuation Deviation (${percentageDiff}%)`,
+      `Review Priority (${reviewLevel})`,
+    ],
+    status: 'ACTIVE',
     createdAt: new Date().toISOString(),
   };
 
-  saveNewCase(newCase);
-  return newCase;
+  saveNewCase(createdCase);
+  return createdCase;
 }

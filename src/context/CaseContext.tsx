@@ -123,18 +123,19 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
     let totalAmountSum = 0;
 
     for (const c of cases) {
-      if (c.status === 'INDICATIVE_READY' || !c.valuerReport) pendingValuer++;
-      if (c.deviation?.requiresManualReview || (c.deviation?.percentageDiff || 0) > 10) highDevAlerts++;
+      if (c.status === 'PENDING_VALUATION' || !c.valuerReport) pendingValuer++;
+      if (Math.abs(c.deviation?.percentageDiff || 0) > 8) highDevAlerts++;
 
-      const ltv = (c.loanFacilityRequested / c.modelIndicativeValue) * 100;
+      const valuerOrModelVal = c.valuerReport?.assessedValue || c.modelIndicativeValue;
+      const ltv = valuerOrModelVal > 0 ? (c.loanFacilityRequested / valuerOrModelVal) * 100 : 0;
       ltvSum += ltv;
 
       const amountCr = c.loanFacilityRequested / 1e7;
       totalAmountSum += amountCr;
 
-      if (c.valuationConfidence === 'High') highConfCount++;
-      else if (c.valuationConfidence === 'Medium') medConfCount++;
-      else lowConfCount++;
+      if (c.reviewLevel === 'LOW') lowConfCount++;
+      else if (c.reviewLevel === 'MEDIUM') medConfCount++;
+      else highConfCount++;
     }
 
     const pct = (n: number) => (total > 0 ? Math.round((n / total) * 1000) / 10 : 0);

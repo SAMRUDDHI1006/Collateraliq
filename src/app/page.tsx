@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { TopNavbar } from '@/components/layout/TopNavbar';
 import { Sidebar, NavView } from '@/components/layout/Sidebar';
@@ -39,7 +39,13 @@ export default function Home() {
 
   const [currentView, setCurrentView] = useState<NavView | 'workbench'>('dashboard');
 
-  // Verification Workbench State
+  // Dashboard Filters State
+  const [filterProduct, setFilterProduct] = useState<string>('ALL');
+  const [filterPropertyType, setFilterPropertyType] = useState<string>('ALL');
+  const [filterRegion, setFilterRegion] = useState<string>('ALL');
+  const [filterReviewLevel, setFilterReviewLevel] = useState<string>('ALL');
+
+  // Workbench State
   const [selectedCaseId, setSelectedCaseId] = useState<string>('CLIQ-DADAR-001');
   const [currentCase, setCurrentCase] = useState<CollateralAssessmentCase | null>(null);
   const [exceptionAcknowledged, setExceptionAcknowledged] = useState<boolean>(false);
@@ -50,6 +56,17 @@ export default function Home() {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<boolean>(false);
   const [isSanctionSuccessModalOpen, setIsSanctionSuccessModalOpen] = useState<boolean>(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState<boolean>(false);
+
+  // Filtered 3,000 cases list derived dynamically
+  const filteredCases = useMemo(() => {
+    return cases.filter((c) => {
+      if (filterProduct !== 'ALL' && c.product !== filterProduct) return false;
+      if (filterPropertyType !== 'ALL' && c.propertyProfile.propertyType !== filterPropertyType) return false;
+      if (filterRegion !== 'ALL' && c.propertyProfile.location !== filterRegion) return false;
+      if (filterReviewLevel !== 'ALL' && c.reviewLevel !== filterReviewLevel) return false;
+      return true;
+    });
+  }, [cases, filterProduct, filterPropertyType, filterRegion, filterReviewLevel]);
 
   // Auth redirect check
   useEffect(() => {
@@ -83,12 +100,11 @@ export default function Home() {
     window.location.href = '/login';
   };
 
-  // Load initial flagship case once benchmarks are ready
-  React.useEffect(() => {
+  // Load initial case
+  useEffect(() => {
     if (!loading && cases.length > 0 && !currentCase) {
       loadCaseDetails(selectedCaseId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, cases]);
 
   const loadCaseDetails = async (caseId: string) => {
@@ -227,14 +243,14 @@ export default function Home() {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white space-y-3">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        <span className="font-bold text-sm tracking-wide">Initializing Collateral Intelligence &amp; Valuation Reconciliation Engine...</span>
+        <span className="font-bold text-sm tracking-wide">Initializing CollateralIQ 3,000-Case Intelligence Engine...</span>
       </div>
     );
   }
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-slate-950 font-sans text-slate-100 select-none">
-      {/* Fixed 48px Top Navigation Bar */}
+      {/* Top Navbar */}
       <TopNavbar
         onSearchSelectCase={handleSelectCase}
         onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
@@ -242,9 +258,8 @@ export default function Home() {
         activeCases={cases as any}
       />
 
-      {/* Main Viewport Flex Row */}
+      {/* Main Viewport */}
       <div className="flex-1 flex overflow-hidden min-h-0 relative">
-        {/* Sidebar */}
         <Sidebar
           currentView={currentView === 'workbench' ? 'dashboard' : currentView}
           onSelectView={(v) => setCurrentView(v)}
@@ -253,46 +268,55 @@ export default function Home() {
           isWorkbenchView={currentView === 'workbench'}
         />
 
-        {/* Main Workspace Area */}
         <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-slate-950">
-          {/* VIEW 1: Operations Dashboard */}
+          {/* VIEW 1: Dashboard */}
           {currentView === 'dashboard' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
-                    Collateral Intelligence &amp; Valuation Reconciliation Dashboard
+                    Collateral Intelligence &amp; Valuation Reconciliation Engine
                   </h1>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Model Indicative Valuation vs. IBBI Valuer Report Reconciliation Suite &bull; Mumbai &amp; Thane
+                    Institutional 3,000-Case Portfolio &bull; Model-Supported Indicative Valuation vs. Independent Valuer Report Reconciliation
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-700/60 font-semibold">
-                    RBI Master Direction Aligned &bull; LTV &le; 75%
+                    22 Mumbai &amp; Thane Regions Indexed
                   </span>
                 </div>
               </div>
 
-              <MetricStrip liveKpis={liveKpis} />
+              {/* Dynamic KPI Strip over Filtered 3,000 Cases */}
+              <MetricStrip filteredCases={filteredCases} totalCasesCount={cases.length} />
 
+              {/* Interactive Visualizations */}
               <AnalyticsGrid
-                liveKpis={liveKpis}
-                localityBenchmarks={benchmarks.locality_benchmarks}
-                onFilterLocality={(loc) => {
-                  const match = cases.find((c) => c.propertyProfile.location === loc);
-                  if (match) handleSelectCase(match.caseId);
-                }}
+                filteredCases={filteredCases}
+                onSelectProduct={(p) => setFilterProduct(p)}
+                onSelectReviewLevel={(l) => setFilterReviewLevel(l)}
+                onSelectRegion={(r) => setFilterRegion(r)}
               />
 
+              {/* Paginated 3,000 Case Table */}
               <LiveTrackingTable
                 cases={cases}
                 onSelectCase={handleSelectCase}
+                filteredCases={filteredCases}
+                setFilterProduct={setFilterProduct}
+                setFilterPropertyType={setFilterPropertyType}
+                setFilterRegion={setFilterRegion}
+                setFilterReviewLevel={setFilterReviewLevel}
+                filterProduct={filterProduct}
+                filterPropertyType={filterPropertyType}
+                filterRegion={filterRegion}
+                filterReviewLevel={filterReviewLevel}
               />
             </div>
           )}
 
-          {/* VIEW 2: Verification Workbench Screen */}
+          {/* VIEW 2: Workbench */}
           {currentView === 'workbench' && currentCase && (
             <div className="flex flex-col h-full overflow-hidden min-h-0">
               <CaseContextStrip
@@ -324,7 +348,7 @@ export default function Home() {
 
               <StickyGovernanceFooter
                 exceptionAcknowledged={exceptionAcknowledged}
-                hasPendingExceptions={(currentCase.deviation?.percentageDiff || 0) > 10}
+                hasPendingExceptions={Math.abs(currentCase.deviation?.percentageDiff || 0) > 8}
                 onRequestClarification={() => setIsClarificationModalOpen(true)}
                 onRejectDocket={() => setIsRejectModalOpen(true)}
                 onProceedToSanction={handleProceedToSanction}
@@ -332,7 +356,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* VIEW 3: Valuer Queue View */}
+          {/* VIEW 3: Valuer Queue */}
           {currentView === 'valuer_queue' && (
             <div className="flex-1 overflow-y-auto p-4 min-h-0">
               <ValuerQueueView
@@ -342,7 +366,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* VIEW 4: Audit Logs View */}
+          {/* VIEW 4: Audit Logs */}
           {currentView === 'audit_logs' && (
             <div className="flex-1 overflow-y-auto p-4 min-h-0">
               <AuditLogsView
@@ -362,7 +386,7 @@ export default function Home() {
         localityList={localityList}
       />
 
-      {/* Governance Decision Modals */}
+      {/* Governance Modals */}
       {currentCase && (
         <>
           <ClarificationModal
@@ -383,20 +407,13 @@ export default function Home() {
           <SanctionSuccessModal
             isOpen={isSanctionSuccessModalOpen}
             onClose={() => setIsSanctionSuccessModalOpen(false)}
-            loanCase={{
-              case_id: currentCase.caseId,
-              borrower_name: currentCase.borrowerName,
-              loan_amount_inr: currentCase.loanFacilityRequested,
-              ltv_percent: Number(((currentCase.loanFacilityRequested / currentCase.modelIndicativeValue) * 100).toFixed(1)),
-              indicative_value_inr: currentCase.modelIndicativeValue,
-              locality: currentCase.propertyProfile.location,
-            } as any}
+            loanCase={currentCase}
             onViewAuditTrail={() => setCurrentView('audit_logs')}
           />
         </>
       )}
 
-      {/* User Profile Slide-Over Drawer */}
+      {/* Profile Drawer */}
       <UserProfileDrawer
         isOpen={isProfileDrawerOpen}
         onClose={() => setIsProfileDrawerOpen(false)}
