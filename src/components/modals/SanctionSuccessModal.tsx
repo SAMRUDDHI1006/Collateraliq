@@ -1,13 +1,13 @@
 'use client';
 
 import React from 'react';
-import { X, CheckCircle2, ShieldCheck, Printer, ArrowRight, Download } from 'lucide-react';
-import { LoanCase } from '@/types/collateral';
+import { X, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { CollateralAssessmentCase } from '@/types/collateral';
 
 interface SanctionSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  loanCase: LoanCase;
+  loanCase: CollateralAssessmentCase;
   onViewAuditTrail: () => void;
 }
 
@@ -18,6 +18,11 @@ export const SanctionSuccessModal: React.FC<SanctionSuccessModalProps> = ({
   onViewAuditTrail,
 }) => {
   if (!isOpen) return null;
+
+  const assessedValuation = loanCase.valuerReport?.assessedValue || loanCase.modelIndicativeValue;
+  const ltvPercent = loanCase.loanFacilityRequested && assessedValuation > 0
+    ? (loanCase.loanFacilityRequested / assessedValuation) * 100
+    : 0;
 
   return (
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -46,30 +51,30 @@ export const SanctionSuccessModal: React.FC<SanctionSuccessModalProps> = ({
               <span>Sanction Governance Gate Cleared</span>
             </div>
             <p className="text-[11px] leading-relaxed text-emerald-800">
-              The underwriter has formally acknowledged the +8.24% area variance exception. Empaneled valuer physical inspection record has been cross-referenced with approved municipal drawings.
+              The underwriter has formally acknowledged the valuation reconciliation. Empaneled valuer physical inspection record has been cross-referenced with indicative valuation model.
             </p>
           </div>
 
           <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-2.5 font-mono text-xs">
             <div className="flex justify-between border-b border-slate-200/80 pb-1.5">
               <span className="text-slate-500 font-sans">Case ID:</span>
-              <span className="font-bold text-slate-900">{loanCase.case_id}</span>
+              <span className="font-bold text-slate-900">{loanCase.caseId}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200/80 pb-1.5">
               <span className="text-slate-500 font-sans">Borrower:</span>
-              <span className="font-bold text-slate-900 font-sans">{loanCase.borrower_name}</span>
+              <span className="font-bold text-slate-900 font-sans">{loanCase.borrowerName}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200/80 pb-1.5">
               <span className="text-slate-500 font-sans">Facility Amount:</span>
-              <span className="font-bold text-slate-900">₹{(loanCase.loan_amount_inr / 1e7).toFixed(2)} Cr ({loanCase.loan_product})</span>
+              <span className="font-bold text-slate-900">₹{(loanCase.loanFacilityRequested / 1e7).toFixed(2)} Cr</span>
             </div>
             <div className="flex justify-between border-b border-slate-200/80 pb-1.5">
               <span className="text-slate-500 font-sans">Assessed Valuation:</span>
-              <span className="font-bold text-blue-700">₹{((loanCase.valuer_assessed_value_inr || loanCase.indicative_value_inr) / 1e7).toFixed(3)} Cr</span>
+              <span className="font-bold text-blue-700">₹{(assessedValuation / 1e7).toFixed(3)} Cr</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500 font-sans">Prudential LTV:</span>
-              <span className="font-bold text-emerald-700">{loanCase.ltv_percent.toFixed(1)}% (&le; 75% RBI Cap)</span>
+              <span className="font-bold text-emerald-700">{ltvPercent.toFixed(1)}% (&le; 75% RBI Cap)</span>
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ import { SanctionSuccessModal } from '@/components/modals/SanctionSuccessModal';
 import { UserProfileDrawer } from '@/components/layout/UserProfileDrawer';
 import { ValuerQueueView } from '@/components/views/ValuerQueueView';
 import { AuditLogsView } from '@/components/views/AuditLogsView';
-import { LoanCase, VerificationFieldComparison } from '@/types/collateral';
+import { CollateralAssessmentCase } from '@/types/collateral';
 import { useCaseStore } from '@/context/CaseContext';
 import { Loader2 } from 'lucide-react';
 
@@ -38,13 +38,10 @@ export default function Home() {
   } = useCaseStore();
 
   const [currentView, setCurrentView] = useState<NavView | 'workbench'>('dashboard');
-  const [selectedTab, setSelectedTab] = useState<string>('all');
 
   // Verification Workbench State
   const [selectedCaseId, setSelectedCaseId] = useState<string>('CLIQ-DADAR-001');
-  const [currentCase, setCurrentCase] = useState<LoanCase | null>(null);
-  const [verificationMatrix, setVerificationMatrix] = useState<VerificationFieldComparison[]>([]);
-  const [highlightedField, setHighlightedField] = useState<string | null>('VF-04');
+  const [currentCase, setCurrentCase] = useState<CollateralAssessmentCase | null>(null);
   const [exceptionAcknowledged, setExceptionAcknowledged] = useState<boolean>(false);
 
   // Modals & Drawers
@@ -54,11 +51,10 @@ export default function Home() {
   const [isSanctionSuccessModalOpen, setIsSanctionSuccessModalOpen] = useState<boolean>(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState<boolean>(false);
 
-  // Auth redirect check: enforce /login on every fresh visit, link click, page refresh (F5), or logout
+  // Auth redirect check
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Check if page was refreshed (F5 / Reload)
     const navEntries = performance.getEntriesByType('navigation');
     const isReload = navEntries.length > 0 && (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
 
@@ -89,20 +85,18 @@ export default function Home() {
 
   // Load initial flagship case once benchmarks are ready
   React.useEffect(() => {
-    if (!loading && benchmarks && !currentCase) {
-      loadCaseDetails('CLIQ-DADAR-001');
+    if (!loading && cases.length > 0 && !currentCase) {
+      loadCaseDetails(selectedCaseId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, benchmarks]);
+  }, [loading, cases]);
 
-  // Fetch case details when selectedCaseId changes
   const loadCaseDetails = async (caseId: string) => {
     try {
       const res = await fetch(`/api/cases/${caseId}`);
       if (res.ok) {
         const data = await res.json();
         setCurrentCase(data.case);
-        setVerificationMatrix(data.verificationMatrix || []);
         setSelectedCaseId(caseId);
       }
     } catch (err) {
@@ -117,24 +111,11 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleTabChange = async (tab: string) => {
-    setSelectedTab(tab);
-    try {
-      const res = await fetch(`/api/cases?tab=${tab}&limit=5000`);
-      const data = await res.json();
-      setCases(data.cases || []);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleCaseCreated = (newCase: LoanCase) => {
-    // addCase triggers context update → all KPIs recalculate via useMemo
+  const handleCaseCreated = (newCase: CollateralAssessmentCase) => {
     addCase(newCase);
-    setSelectedCaseId(newCase.case_id);
+    setSelectedCaseId(newCase.caseId);
     setCurrentCase(newCase);
     setExceptionAcknowledged(false);
-    loadCaseDetails(newCase.case_id);
     setCurrentView('workbench');
   };
 
@@ -146,7 +127,7 @@ export default function Home() {
   }) => {
     if (!currentCase) return;
     try {
-      const res = await fetch(`/api/cases/${currentCase.case_id}`, {
+      const res = await fetch(`/api/cases/${currentCase.caseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,8 +139,7 @@ export default function Home() {
       if (res.ok) {
         const updated = await res.json();
         setCurrentCase(updated.case);
-        // Refresh audit logs
-        const aRes = await fetch(`/api/audit?case_id=${currentCase.case_id}`);
+        const aRes = await fetch(`/api/audit?case_id=${currentCase.caseId}`);
         const aData = await aRes.json();
         setAuditLogs(aData.logs || []);
       }
@@ -171,12 +151,12 @@ export default function Home() {
   const handleToggleAcknowledge = async (val: boolean) => {
     setExceptionAcknowledged(val);
     if (val && currentCase) {
-      await fetch(`/api/cases/${currentCase.case_id}`, {
+      await fetch(`/api/cases/${currentCase.caseId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exception_acknowledged: true }),
       });
-      const aRes = await fetch(`/api/audit?case_id=${currentCase.case_id}`);
+      const aRes = await fetch(`/api/audit?case_id=${currentCase.caseId}`);
       const aData = await aRes.json();
       setAuditLogs(aData.logs || []);
     }
@@ -188,16 +168,16 @@ export default function Home() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        case_id: currentCase.case_id,
+        case_id: currentCase.caseId,
         officer_name: 'S. Nair',
         officer_role: 'Senior Credit Officer',
         action_type: 'RFI_SENT',
         description: `Underwriter RFI dispatched to ${recipient}: "${queryText}"`,
-        previous_state: currentCase.collateral_assessment,
+        previous_state: currentCase.status,
         new_state: 'Clarification Pending',
       }),
     });
-    const aRes = await fetch(`/api/audit?case_id=${currentCase.case_id}`);
+    const aRes = await fetch(`/api/audit?case_id=${currentCase.caseId}`);
     const aData = await aRes.json();
     setAuditLogs(aData.logs || []);
   };
@@ -208,19 +188,16 @@ export default function Home() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        case_id: currentCase.case_id,
+        case_id: currentCase.caseId,
         officer_name: 'S. Nair',
         officer_role: 'Senior Credit Officer',
         action_type: 'DOCKET_REJECTED',
         description: `Collateral docket declined. Reason: "${reason}". Officer Notes: "${notes}"`,
-        previous_state: currentCase.collateral_assessment,
+        previous_state: currentCase.status,
         new_state: 'DECLINED / REJECTED',
       }),
     });
-    if (currentCase) {
-      currentCase.collateral_assessment = 'HIGH - REVIEW REQUIRED';
-    }
-    const aRes = await fetch(`/api/audit?case_id=${currentCase.case_id}`);
+    const aRes = await fetch(`/api/audit?case_id=${currentCase.caseId}`);
     const aData = await aRes.json();
     setAuditLogs(aData.logs || []);
   };
@@ -231,16 +208,16 @@ export default function Home() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        case_id: currentCase.case_id,
+        case_id: currentCase.caseId,
         officer_name: 'S. Nair',
         officer_role: 'Senior Credit Officer',
         action_type: 'SANCTION_RECOMMENDED',
-        description: `Facility recommended for formal Credit Committee sanction at INR ${(currentCase.loan_amount_inr / 1e7).toFixed(2)} Cr (LTV ${currentCase.ltv_percent.toFixed(1)}%). All exceptions acknowledged with HITL audit sign-off.`,
-        previous_state: 'Review Complete',
-        new_state: 'Sanction Recommended',
+        description: `Facility recommended for formal Credit Committee sanction at INR ${(currentCase.loanFacilityRequested / 1e7).toFixed(2)} Cr. Valuation reconciliation sign-off completed.`,
+        previous_state: currentCase.status,
+        new_state: 'SANCTION_RECOMMENDED',
       }),
     });
-    const aRes = await fetch(`/api/audit?case_id=${currentCase.case_id}`);
+    const aRes = await fetch(`/api/audit?case_id=${currentCase.caseId}`);
     const aData = await aRes.json();
     setAuditLogs(aData.logs || []);
     setIsSanctionSuccessModalOpen(true);
@@ -248,10 +225,9 @@ export default function Home() {
 
   if (loading || !benchmarks) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white space-y-3">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white space-y-3">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        <span className="font-bold text-sm tracking-wide">Initializing CollateralIQ Calibrated Engine...</span>
-        <span className="text-xs text-slate-400 font-mono">Calibrated against 3,000 Mumbai &amp; Thane cases</span>
+        <span className="font-bold text-sm tracking-wide">Initializing Collateral Intelligence &amp; Valuation Reconciliation Engine...</span>
       </div>
     );
   }
@@ -263,7 +239,7 @@ export default function Home() {
         onSearchSelectCase={handleSelectCase}
         onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
         onOpenProfileDrawer={() => setIsProfileDrawerOpen(true)}
-        activeCases={cases}
+        activeCases={cases as any}
       />
 
       {/* Main Viewport Flex Row */}
@@ -279,17 +255,16 @@ export default function Home() {
 
         {/* Main Workspace Area */}
         <main className="flex-1 flex flex-col overflow-hidden min-h-0 bg-slate-950">
-          {/* VIEW 1: Operations Dashboard (Screen 1) */}
+          {/* VIEW 1: Operations Dashboard */}
           {currentView === 'dashboard' && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-              {/* Top Page Title & Regulatory Badge */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h1 className="text-lg font-extrabold text-slate-100 tracking-tight">
-                    Collateral Intelligence Operations Dashboard
+                    Collateral Intelligence &amp; Valuation Reconciliation Dashboard
                   </h1>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    AI-Assisted decision support for Home Loans &amp; LAP &bull; Greater Mumbai &amp; Thane
+                    Model Indicative Valuation vs. IBBI Valuer Report Reconciliation Suite &bull; Mumbai &amp; Thane
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -299,62 +274,45 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* 4 KPI Metric Strip Cards */}
               <MetricStrip liveKpis={liveKpis} />
 
-              {/* Visuals Grid: Triage Breakdown & Portfolio Exposure */}
               <AnalyticsGrid
                 liveKpis={liveKpis}
                 localityBenchmarks={benchmarks.locality_benchmarks}
                 onFilterLocality={(loc) => {
-                  const match = cases.find((c) => c.locality === loc);
-                  if (match) handleSelectCase(match.case_id);
+                  const match = cases.find((c) => c.propertyProfile.location === loc);
+                  if (match) handleSelectCase(match.caseId);
                 }}
               />
 
-              {/* Live Tracking Stream Table */}
               <LiveTrackingTable
                 cases={cases}
                 onSelectCase={handleSelectCase}
-                onTabChange={handleTabChange}
-                selectedTab={selectedTab}
               />
             </div>
           )}
 
-          {/* VIEW 2: Verification Workbench Hero Screen (Screen 3) */}
+          {/* VIEW 2: Verification Workbench Screen */}
           {currentView === 'workbench' && currentCase && (
             <div className="flex flex-col h-full overflow-hidden min-h-0">
-              {/* Top Case Context Strip */}
               <CaseContextStrip
                 loanCase={currentCase}
                 onBackToDashboard={() => setCurrentView('dashboard')}
               />
 
-              {/* 3-Column Hero Workspace */}
               <div className="flex-1 grid grid-cols-12 gap-2.5 p-2.5 overflow-hidden min-h-0">
-                {/* Left Column: Document Viewer */}
                 <div className="col-span-12 lg:col-span-4 h-full min-h-0">
-                  <DocumentViewer
-                    loanCase={currentCase}
-                    documentFileName={currentCase.uploaded_document_name}
-                    highlightedField={highlightedField}
-                    onSelectField={(fId) => setHighlightedField(fId)}
-                  />
+                  <DocumentViewer loanCase={currentCase} />
                 </div>
 
-                {/* Middle Column: Cross-Doc Verification Matrix */}
                 <div className="col-span-12 lg:col-span-5 h-full min-h-0">
                   <VerificationMatrix
-                    fields={verificationMatrix}
-                    highlightedField={highlightedField}
-                    onSelectField={(fId) => setHighlightedField(fId)}
+                    loanCase={currentCase}
                     exceptionAcknowledged={exceptionAcknowledged}
                     onToggleAcknowledge={handleToggleAcknowledge}
                   />
                 </div>
 
-                {/* Right Column: Valuation & Valuer Workbench */}
                 <div className="col-span-12 lg:col-span-3 h-full min-h-0">
                   <ValuationWorkbench
                     loanCase={currentCase}
@@ -364,10 +322,9 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Fixed 44px Sticky Governance Footer */}
               <StickyGovernanceFooter
                 exceptionAcknowledged={exceptionAcknowledged}
-                hasPendingExceptions={verificationMatrix.some((f) => f.status === 'DISCREPANCY')}
+                hasPendingExceptions={(currentCase.deviation?.percentageDiff || 0) > 10}
                 onRequestClarification={() => setIsClarificationModalOpen(true)}
                 onRejectDocket={() => setIsRejectModalOpen(true)}
                 onProceedToSanction={handleProceedToSanction}
@@ -379,7 +336,7 @@ export default function Home() {
           {currentView === 'valuer_queue' && (
             <div className="flex-1 overflow-y-auto p-4 min-h-0">
               <ValuerQueueView
-                cases={cases}
+                cases={cases as any}
                 onSelectCase={handleSelectCase}
               />
             </div>
@@ -394,30 +351,10 @@ export default function Home() {
               />
             </div>
           )}
-
-          {/* VIEW 5: Past Cases or Borrowers View */}
-          {(currentView === 'past_cases' || currentView === 'borrowers') && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-              <div className="bg-slate-900 rounded-xl border border-slate-800 p-4 shadow-sm text-slate-100">
-                <h2 className="text-sm font-bold text-slate-100 capitalize">
-                  {currentView === 'past_cases' ? 'Institutional Case Archive' : 'Active Borrower Registry'}
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Archived collateral assessments across 22 micro-markets in Mumbai and Thane.
-                </p>
-              </div>
-              <LiveTrackingTable
-                cases={cases}
-                onSelectCase={handleSelectCase}
-                onTabChange={handleTabChange}
-                selectedTab={selectedTab}
-              />
-            </div>
-          )}
         </main>
       </div>
 
-      {/* Screen 2: "+ New Loan Case" Intake Modal (3-Step Pipeline) */}
+      {/* Intake Modal */}
       <NewCaseModal
         isOpen={isIntakeModalOpen}
         onClose={() => setIsIntakeModalOpen(false)}
@@ -431,25 +368,30 @@ export default function Home() {
           <ClarificationModal
             isOpen={isClarificationModalOpen}
             onClose={() => setIsClarificationModalOpen(false)}
-            caseId={currentCase.case_id}
-            borrowerName={currentCase.borrower_name}
+            caseId={currentCase.caseId}
+            borrowerName={currentCase.borrowerName}
             onSubmitClarification={handleSubmitClarification}
           />
 
           <RejectDocketModal
             isOpen={isRejectModalOpen}
             onClose={() => setIsRejectModalOpen(false)}
-            caseId={currentCase.case_id}
+            caseId={currentCase.caseId}
             onConfirmReject={handleConfirmReject}
           />
 
           <SanctionSuccessModal
             isOpen={isSanctionSuccessModalOpen}
             onClose={() => setIsSanctionSuccessModalOpen(false)}
-            loanCase={currentCase}
-            onViewAuditTrail={() => {
-              setCurrentView('audit_logs');
-            }}
+            loanCase={{
+              case_id: currentCase.caseId,
+              borrower_name: currentCase.borrowerName,
+              loan_amount_inr: currentCase.loanFacilityRequested,
+              ltv_percent: Number(((currentCase.loanFacilityRequested / currentCase.modelIndicativeValue) * 100).toFixed(1)),
+              indicative_value_inr: currentCase.modelIndicativeValue,
+              locality: currentCase.propertyProfile.location,
+            } as any}
+            onViewAuditTrail={() => setCurrentView('audit_logs')}
           />
         </>
       )}

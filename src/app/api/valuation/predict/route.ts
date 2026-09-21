@@ -4,15 +4,14 @@ import { calculateRealtimeValuation } from '@/lib/data';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const carpetArea = parseFloat(body.carpet_area_sqft);
-    const locality = body.locality || 'Dadar West';
-    const loanAmount = parseFloat(body.loan_amount_inr);
-    const areaVariance = parseFloat(body.area_variance_percent ?? 0);
-    const encumbranceVerified = body.encumbrance_verified !== undefined ? Boolean(body.encumbrance_verified) : true;
+    const carpetArea = parseFloat(body.carpetArea || body.carpet_area_sqft);
+    const locality = body.locality || body.location || 'Dadar West';
+    const loanAmount = parseFloat(body.loanFacilityRequested || body.loan_amount_inr);
+    const valuerAssessedValue = body.valuerAssessedValue ? parseFloat(body.valuerAssessedValue) : undefined;
 
     if (isNaN(carpetArea) || isNaN(loanAmount)) {
       return NextResponse.json(
-        { error: 'carpet_area_sqft and loan_amount_inr are required numbers' },
+        { error: 'carpetArea and loanFacilityRequested are required numeric fields.' },
         { status: 400 }
       );
     }
@@ -21,8 +20,7 @@ export async function POST(req: NextRequest) {
       carpetAreaSqft: carpetArea,
       locality,
       loanAmountInr: loanAmount,
-      areaVariancePercent: areaVariance,
-      encumbranceVerified,
+      valuerAssessedValue,
     });
 
     return NextResponse.json({
@@ -30,10 +28,10 @@ export async function POST(req: NextRequest) {
       calculation: result,
       regulatory: {
         rbi_ceiling_ltv: 75.0,
-        rbi_rule_citation: 'RBI Master Direction - Housing Finance (Prudential LTV ceiling <= 75% for facilities above INR 30 Lakhs).',
-        tolerance_ceiling_pct: 5.0,
-        ibbi_rule_citation: 'IBBI (Registered Valuers and Valuation) Rules, 2017 - Valuation corridor tolerance limit set at +/- 5%.',
-      }
+        rbi_rule_citation: 'RBI Master Direction - Housing Finance Prudential LTV ceiling <= 75%.',
+        tolerance_ceiling_pct: 10.0,
+        ibbi_rule_citation: 'IBBI Registered Valuers Rules - Valuation deviation threshold set at 10%.',
+      },
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
