@@ -88,6 +88,67 @@ h1, h2, h3, .font-heading {
   animation: bbox-amber-pulse 2.5s infinite ease-in-out;
 }
 
+/* Subtle financial-tech grid background */
+.fintech-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Institutional Ambient Glow Orbs moving slowly across screen */
+@keyframes drift-orb-1 {
+  0% { transform: translate(0px, 0px) scale(1); opacity: 0.12; }
+  50% { transform: translate(70px, 50px) scale(1.15); opacity: 0.20; }
+  100% { transform: translate(0px, 0px) scale(1); opacity: 0.12; }
+}
+
+@keyframes drift-orb-2 {
+  0% { transform: translate(0px, 0px) scale(1.1); opacity: 0.10; }
+  50% { transform: translate(-60px, -45px) scale(0.95); opacity: 0.18; }
+  100% { transform: translate(0px, 0px) scale(1.1); opacity: 0.10; }
+}
+
+@keyframes drift-orb-3 {
+  0% { transform: translate(0px, 0px) scale(0.95); opacity: 0.08; }
+  50% { transform: translate(45px, -35px) scale(1.1); opacity: 0.16; }
+  100% { transform: translate(0px, 0px) scale(0.95); opacity: 0.08; }
+}
+
+.animate-drift-orb-1 {
+  animation: drift-orb-1 16s ease-in-out infinite;
+}
+
+.animate-drift-orb-2 {
+  animation: drift-orb-2 20s ease-in-out infinite;
+}
+
+.animate-drift-orb-3 {
+  animation: drift-orb-3 18s ease-in-out infinite;
+}
+
+/* Flowing horizontal data lines */
+@keyframes wave-flow {
+  0% { transform: translateX(-8%); }
+  50% { transform: translateX(4%); }
+  100% { transform: translateX(-8%); }
+}
+
+.animate-wave-flow {
+  animation: wave-flow 22s ease-in-out infinite;
+}
+
+/* Floating subtle data point particle */
+@keyframes particle-drift {
+  0% { transform: translateY(0px) scale(1); opacity: 0.2; }
+  50% { transform: translateY(-12px) scale(1.25); opacity: 0.7; }
+  100% { transform: translateY(0px) scale(1); opacity: 0.2; }
+}
+
+.animate-particle {
+  animation: particle-drift 6s ease-in-out infinite;
+}
+
 /* Respect user's reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
