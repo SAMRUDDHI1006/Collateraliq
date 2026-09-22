@@ -128,16 +128,18 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleOpenDemoCase = () => {
+    handleSelectCase('CLIQ-DADAR-001');
+  };
+
   const handleCaseCreated = (newCase: CollateralAssessmentCase) => {
-    // Fresh cases (CLIQ-LIVE-2026-XXXX) are NOT added to the 3,000-case portfolio.
-    // Only save to portfolio if it's not a fresh case (for future "Save to Portfolio" feature).
-    if (!newCase.isFreshCase) {
-      addCase(newCase);
-    }
+    // Save fresh case to context state and persistent store
+    addCase(newCase);
     setSelectedCaseId(newCase.caseId);
     setCurrentCase(newCase);
     setExceptionAcknowledged(false);
-    setCurrentView('workbench');
+    setCurrentView('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleUpdateValuerAssessment = async (valData: {
@@ -269,6 +271,7 @@ export default function Home() {
           currentView={currentView === 'workbench' ? 'dashboard' : currentView}
           onSelectView={(v) => setCurrentView(v)}
           onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
+          onOpenDemoCase={handleOpenDemoCase}
           valuerQueueCount={liveKpis.pendingValuerReview}
           isWorkbenchView={currentView === 'workbench'}
         />
@@ -287,6 +290,13 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleOpenDemoCase}
+                    className="text-xs font-semibold px-3 py-1 rounded-xl bg-amber-950/60 hover:bg-amber-900/70 border border-amber-600/50 text-amber-300 flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    title="Open pre-configured CLIQ-DADAR-001 demo case"
+                  >
+                    <span>⚡ Explore Demo Case</span>
+                  </button>
                   <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/60 px-2.5 py-1 rounded-full border border-cyan-700/60 font-semibold">
                     22 Mumbai &amp; Thane Regions Indexed
                   </span>
@@ -404,6 +414,7 @@ export default function Home() {
         onClose={() => setIsIntakeModalOpen(false)}
         onCaseCreated={handleCaseCreated}
         localityList={localityList}
+        onOpenDemoCase={handleOpenDemoCase}
       />
 
       {/* Governance Modals */}

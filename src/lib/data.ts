@@ -1,5 +1,5 @@
 import { BenchmarksData, CollateralAssessmentCase, AuditLogItem } from '@/types/collateral';
-import { BENCHMARKS, REGIONS_22, getStoredCases } from './caseStore';
+import { BENCHMARKS, REGIONS_22, getStoredCases, getAllCasesWithLive } from './caseStore';
 
 const AUDIT_LOGS_STORE: AuditLogItem[] = [
   {
@@ -64,7 +64,7 @@ export function getBenchmarks(): BenchmarksData {
 }
 
 export function getAllCases(): CollateralAssessmentCase[] {
-  return getStoredCases();
+  return getAllCasesWithLive();
 }
 
 export function getCaseById(caseId: string): CollateralAssessmentCase | null {

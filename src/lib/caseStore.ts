@@ -357,19 +357,78 @@ export function generate3000Cases(): CollateralAssessmentCase[] {
 }
 
 const STORAGE_KEY = 'collateraliq_3000_cases_v3';
+export const LIVE_CASES_STORAGE_KEY = 'collateraliq_live_cases_v1';
 const FRESH_CASE_COUNTER_KEY = 'collateraliq_fresh_case_counter';
 
 export const SEED_CASES: CollateralAssessmentCase[] = generate3000Cases();
 
+/** In-memory store for server-side environments where localStorage is unavailable */
+const memoryLiveCases: CollateralAssessmentCase[] = [];
+
 /** Generate a sequential fresh case ID: CLIQ-LIVE-2026-0001, 0002, etc. */
 export function generateFreshCaseId(): string {
   if (typeof window === 'undefined') {
-    return `CLIQ-LIVE-2026-${String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')}`;
+    const counter = memoryLiveCases.length + 1;
+    return `CLIQ-LIVE-2026-${String(counter).padStart(4, '0')}`;
   }
   const current = parseInt(localStorage.getItem(FRESH_CASE_COUNTER_KEY) || '0', 10);
   const next = current + 1;
   localStorage.setItem(FRESH_CASE_COUNTER_KEY, String(next));
   return `CLIQ-LIVE-2026-${String(next).padStart(4, '0')}`;
+}
+
+/** Get only live user-created fresh cases */
+export function getLiveCases(): CollateralAssessmentCase[] {
+  if (typeof window === 'undefined') {
+    return memoryLiveCases;
+  }
+  try {
+    const raw = localStorage.getItem(LIVE_CASES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Error reading liveCases:', err);
+    return [];
+  }
+}
+
+/** Save a fresh live case to persistent storage (without modifying 3,000 portfolio baseline) */
+export function saveLiveCase(newCase: CollateralAssessmentCase): CollateralAssessmentCase[] {
+  // Always assign freshCase marker
+  const freshCase: CollateralAssessmentCase = {
+    ...newCase,
+    isFreshCase: true,
+    freshCaseId: newCase.caseId,
+  };
+
+  if (typeof window === 'undefined') {
+    const existingIdx = memoryLiveCases.findIndex((c) => c.caseId === freshCase.caseId);
+    if (existingIdx >= 0) {
+      memoryLiveCases[existingIdx] = freshCase;
+    } else {
+      memoryLiveCases.unshift(freshCase);
+    }
+    return memoryLiveCases;
+  }
+
+  try {
+    const currentLive = getLiveCases();
+    const filtered = currentLive.filter((c) => c.caseId !== freshCase.caseId);
+    const updated = [freshCase, ...filtered];
+    localStorage.setItem(LIVE_CASES_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (err) {
+    console.error('Error saving liveCase:', err);
+    return [];
+  }
+}
+
+/** Get all cases combined: Live Cases first, followed by the 3,000 Portfolio baseline */
+export function getAllCasesWithLive(): CollateralAssessmentCase[] {
+  const live = getLiveCases();
+  const portfolio = getStoredCases();
+  return [...live, ...portfolio];
 }
 
 export function getStoredCases(): CollateralAssessmentCase[] {
@@ -395,19 +454,24 @@ export function getStoredCases(): CollateralAssessmentCase[] {
 }
 
 export function saveNewCase(newCase: CollateralAssessmentCase): CollateralAssessmentCase[] {
+  if (newCase.isFreshCase) {
+    saveLiveCase(newCase);
+    return getAllCasesWithLive();
+  }
   const current = getStoredCases();
   const updated = [newCase, ...current];
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     } catch (e) {
-      console.error('Error saving new case:', e);
+      console.error('Error saving case:', e);
     }
   }
   return updated;
 }
 
 export function processNewCase(payload: {
+  caseId?: string;
   borrowerName: string;
   borrower?: any;
   product: LoanProduct;
@@ -420,34 +484,51 @@ export function processNewCase(payload: {
   balanceTransfer?: any;
 }): CollateralAssessmentCase {
   const location = payload.propertyProfile?.location || 'Dadar West';
-  const carpetArea = Number(payload.propertyProfile?.carpetArea) || 850;
+  const carpetArea = Number(payload.propertyProfile?.carpetArea) || 0;
   const benchmarkRate = BENCHMARKS[location] || 35000;
 
-  const modelIndicativeValue = Math.round(carpetArea * benchmarkRate);
+  const modelIndicativeValue = carpetArea > 0 ? Math.round(carpetArea * benchmarkRate) : 0;
   const minRange = Math.round(modelIndicativeValue * 0.95);
   const maxRange = Math.round(modelIndicativeValue * 1.05);
 
-  const valuerAssessedValue = payload.valuerReport?.assessedValue
+  const valuerAssessedValue = payload.valuerReport?.assessedValue !== undefined && payload.valuerReport?.assessedValue !== null && payload.valuerReport?.assessedValue !== ''
     ? Number(payload.valuerReport.assessedValue)
-    : modelIndicativeValue;
-  const absoluteDiff = Math.abs(valuerAssessedValue - modelIndicativeValue);
-  const percentageDiff = modelIndicativeValue > 0
+    : 0;
+
+  const absoluteDiff = valuerAssessedValue > 0 && modelIndicativeValue > 0
+    ? Math.abs(valuerAssessedValue - modelIndicativeValue)
+    : 0;
+
+  const percentageDiff = modelIndicativeValue > 0 && valuerAssessedValue > 0
     ? Number(((valuerAssessedValue - modelIndicativeValue) / modelIndicativeValue * 100).toFixed(2))
     : 0;
 
   let reviewLevel: ReviewLevel = 'LOW';
-  if (Math.abs(percentageDiff) > 8.0) {
-    reviewLevel = 'HIGH';
-  } else if (Math.abs(percentageDiff) > 3.0) {
-    reviewLevel = 'MEDIUM';
+  if (valuerAssessedValue > 0 && modelIndicativeValue > 0) {
+    if (Math.abs(percentageDiff) > 8.0) {
+      reviewLevel = 'HIGH';
+    } else if (Math.abs(percentageDiff) > 3.0) {
+      reviewLevel = 'MEDIUM';
+    }
   }
 
-  // Fresh case ID — NEVER added to portfolio, stays at 3,000
-  const freshCaseId = generateFreshCaseId();
+  // Generate dynamic sequential case ID or use supplied ID
+  const freshCaseId = payload.caseId || generateFreshCaseId();
 
-  const valuerRate = valuerAssessedValue > 0 ? Math.round(valuerAssessedValue / carpetArea) : benchmarkRate;
+  const valuerRate = valuerAssessedValue > 0 && carpetArea > 0
+    ? Math.round(valuerAssessedValue / carpetArea)
+    : 0;
   const today = new Date().toISOString().split('T')[0];
   const bhk = payload.propertyProfile?.bhk || '2 BHK';
+  const requestedLoan = Number(payload.loanFacilityRequested) || 0;
+
+  const valuerOrModel = valuerAssessedValue > 0 ? valuerAssessedValue : modelIndicativeValue;
+  const ltvRatio = valuerOrModel > 0 && requestedLoan > 0
+    ? Number(((requestedLoan / valuerOrModel) * 100).toFixed(1))
+    : 0;
+  const coverageRatio = requestedLoan > 0 && valuerOrModel > 0
+    ? Number((valuerOrModel / requestedLoan).toFixed(2))
+    : 0;
 
   const createdCase: CollateralAssessmentCase = {
     caseId: freshCaseId,
@@ -456,8 +537,8 @@ export function processNewCase(payload: {
     borrowerName: payload.borrowerName || 'New Applicant',
     borrower: payload.borrower,
     product: payload.product,
-    loanPurpose: payload.loanPurpose,
-    loanFacilityRequested: Number(payload.loanFacilityRequested) || 20000000,
+    loanPurpose: payload.loanPurpose || (payload.product === 'Home Loan' ? 'Home Purchase' : payload.product === 'Balance Transfer' ? 'Balance Transfer' : 'Loan Against Property'),
+    loanFacilityRequested: requestedLoan,
     tenureYears: payload.tenureYears,
     interestRate: payload.interestRate,
     propertyProfile: {
@@ -471,7 +552,7 @@ export function processNewCase(payload: {
       builtUpArea: payload.propertyProfile?.builtUpArea,
       floor: Number(payload.propertyProfile?.floor) || 1,
       totalFloors: payload.propertyProfile?.totalFloors,
-      buildingAge: Number(payload.propertyProfile?.buildingAge) || 5,
+      buildingAge: Number(payload.propertyProfile?.buildingAge) || 0,
       parking: payload.propertyProfile?.parking || 'Open Parking',
       occupancy: payload.propertyProfile?.occupancy || 'Self-occupied',
     },
@@ -483,18 +564,18 @@ export function processNewCase(payload: {
       { project: `${location} Heights`, bhk, ratePerSqFt: Math.round(benchmarkRate * 0.985), distance: '0.3 km' },
       { project: `${location} Park View`, bhk, ratePerSqFt: Math.round(benchmarkRate * 1.015), distance: '0.5 km' },
     ],
-    valuerReport: payload.valuerReport ? {
-      valuerName: payload.valuerReport.valuerName || 'Empaneled IBBI Valuer',
+    valuerReport: valuerAssessedValue > 0 ? {
+      valuerName: payload.valuerReport?.valuerName || 'Empaneled IBBI Valuer',
       assessedValue: valuerAssessedValue,
-      areaConsidered: payload.valuerReport.areaConsidered || carpetArea,
+      areaConsidered: payload.valuerReport?.areaConsidered || carpetArea,
       rateApplied: valuerRate,
-      inspectionDate: payload.valuerReport.inspectionDate || today,
-      conditionRating: payload.valuerReport.conditionRating || 'Good',
+      inspectionDate: payload.valuerReport?.inspectionDate || today,
+      conditionRating: payload.valuerReport?.conditionRating || 'Good',
       marketability: 'High Liquidity',
-      valuationMethod: payload.valuerReport.valuationMethod || 'Sales Comparison Approach',
-      comparablesUsedCount: payload.valuerReport.comparablesUsedCount || 3,
-      comparablesAvgRate: payload.valuerReport.comparablesAvgRate || benchmarkRate,
-      adjustmentsNote: payload.valuerReport.adjustmentsNote,
+      valuationMethod: payload.valuerReport?.valuationMethod || 'Sales Comparison Approach',
+      comparablesUsedCount: payload.valuerReport?.comparablesUsedCount || 3,
+      comparablesAvgRate: payload.valuerReport?.comparablesAvgRate || valuerRate,
+      adjustmentsNote: payload.valuerReport?.adjustmentsNote || 'Standard market valuation adjustments applied',
     } : undefined,
     deviation: {
       absoluteDiff,
@@ -502,7 +583,7 @@ export function processNewCase(payload: {
       effectiveRate: {
         modelRate: benchmarkRate,
         valuerRate,
-        diffPerSqFt: valuerRate - benchmarkRate,
+        diffPerSqFt: valuerRate > 0 ? valuerRate - benchmarkRate : 0,
       },
       comparablesCount: {
         modelCount: 3,
@@ -510,7 +591,7 @@ export function processNewCase(payload: {
       },
       avgComparableRate: {
         modelAvg: benchmarkRate,
-        valuerAvg: payload.valuerReport?.comparablesAvgRate || benchmarkRate,
+        valuerAvg: payload.valuerReport?.comparablesAvgRate || valuerRate,
       },
       areaUsed: {
         modelArea: carpetArea,
@@ -526,25 +607,27 @@ export function processNewCase(payload: {
       },
       explicitAdjustments: payload.valuerReport?.adjustmentsNote || 'No explicit adjustments noted',
       explanationConfidence: 'High',
-      explanationText: `CollateralIQ indicative value ₹${(modelIndicativeValue / 1e7).toFixed(3)} Cr vs independent valuer ₹${(valuerAssessedValue / 1e7).toFixed(3)} Cr (${percentageDiff > 0 ? '+' : ''}${percentageDiff}% deviation). Primary driver: effective rate ₹${benchmarkRate.toLocaleString()}/sq.ft (model) vs ₹${valuerRate.toLocaleString()}/sq.ft (valuer) on ${carpetArea} sq.ft carpet area.`,
+      explanationText: valuerAssessedValue > 0
+        ? `CollateralIQ indicative value ₹${(modelIndicativeValue / 1e7).toFixed(3)} Cr vs independent valuer ₹${(valuerAssessedValue / 1e7).toFixed(3)} Cr (${percentageDiff > 0 ? '+' : ''}${percentageDiff}% deviation). Primary driver: effective rate ₹${benchmarkRate.toLocaleString()}/sq.ft (model) vs ₹${valuerRate.toLocaleString()}/sq.ft (valuer) on ${carpetArea} sq.ft carpet area.`
+        : 'CollateralIQ indicative valuation generated. Awaiting independent valuer report.',
       identifiedDrivers: [
-        `Effective Rate Difference (${valuerRate - benchmarkRate > 0 ? '+' : ''}₹${(valuerRate - benchmarkRate).toLocaleString()}/sq.ft)`,
+        ...(valuerRate > 0 ? [`Effective Rate Difference (${valuerRate - benchmarkRate > 0 ? '+' : ''}₹${(valuerRate - benchmarkRate).toLocaleString()}/sq.ft)`] : []),
         `Review Level Classification (${reviewLevel})`,
-        ...(Math.abs(percentageDiff) > 3 ? [`Deviation Exceeds 3% Threshold (${percentageDiff > 0 ? '+' : ''}${percentageDiff}%)`] : []),
+        ...(Math.abs(percentageDiff) > 3 ? [`Deviation Exceeds 3% Tolerance (${percentageDiff > 0 ? '+' : ''}${percentageDiff}%)`] : []),
+        `Calculated LTV: ${ltvRatio}% | Coverage: ${coverageRatio}x`,
       ],
     },
     balanceTransfer: payload.balanceTransfer || { isBalanceTransfer: false },
     reviewLevel,
     reviewDrivers: [
       `Valuation Deviation (${percentageDiff > 0 ? '+' : ''}${percentageDiff}%)`,
-      `LTV Analysis Required`,
+      `Calculated LTV (${ltvRatio}%)`,
+      `Collateral Coverage (${coverageRatio}x)`,
       `Review Priority (${reviewLevel})`,
     ],
     status: 'ACTIVE',
     createdAt: new Date().toISOString(),
   };
 
-  // NOTE: Fresh cases (CLIQ-LIVE-2026-XXXX) are NOT saved to the 3,000-case portfolio.
-  // The 3,000-case portfolio baseline stays clean and unchanged.
   return createdCase;
 }

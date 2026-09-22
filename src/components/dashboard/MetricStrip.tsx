@@ -54,6 +54,9 @@ export const MetricStrip: React.FC<MetricStripProps> = ({ filteredCases, totalCa
   const avgCollateralValueCr = count > 0 ? collateralValueSum / count : 0;
   const avgDeviation = deviationCount > 0 ? deviationSum / deviationCount : 0;
 
+  const liveCasesCount = filteredCases.filter((c) => c.isFreshCase).length;
+  const portfolioCasesCount = count - liveCasesCount;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 select-none">
       {/* Card 1: Total & Active Cases */}
@@ -70,7 +73,9 @@ export const MetricStrip: React.FC<MetricStripProps> = ({ filteredCases, totalCa
           <span className="text-3xl font-extrabold font-mono text-[#F8FAFC] tracking-tight tabular-nums font-heading">
             {count.toLocaleString('en-IN')}
           </span>
-          <span className="text-xs font-medium text-[#64748B]">of {totalCasesCount.toLocaleString('en-IN')}</span>
+          <span className="text-xs font-medium text-[#64748B]">
+            {liveCasesCount > 0 ? `(${portfolioCasesCount.toLocaleString('en-IN')} Base + ${liveCasesCount} Live)` : `of ${totalCasesCount.toLocaleString('en-IN')}`}
+          </span>
         </div>
         <div className="mt-3 text-[11px] text-[#94A3B8] flex items-center justify-between border-t border-white/[0.06] pt-2.5 font-mono">
           <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">

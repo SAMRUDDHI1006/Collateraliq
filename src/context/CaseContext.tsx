@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { BenchmarksData, CollateralAssessmentCase, AuditLogItem } from '@/types/collateral';
+import { getLiveCases, saveLiveCase } from '@/lib/caseStore';
 
 // ─── Derived KPI Shape ───────────────────────────────────────────────
 export interface LiveKpis {
@@ -24,6 +25,11 @@ interface CaseContextValue {
   benchmarks: BenchmarksData | null;
   auditLogs: AuditLogItem[];
   loading: boolean;
+
+  // Counts
+  portfolioCount: number;
+  liveCount: number;
+  totalCount: number;
 
   // Derived live KPIs
   liveKpis: LiveKpis;
@@ -68,8 +74,31 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
         const casesData = await casesRes.json();
         const auditData = await auditRes.json();
 
+        // Merge API cases with client-side localStorage live cases
+        const clientLiveCases = getLiveCases();
+        const apiCases: CollateralAssessmentCase[] = casesData.cases || [];
+
+        // Deduplicate
+        const seenIds = new Set<string>();
+        const merged: CollateralAssessmentCase[] = [];
+
+        // First prepend live cases from client localStorage
+        for (const c of clientLiveCases) {
+          if (!seenIds.has(c.caseId)) {
+            seenIds.add(c.caseId);
+            merged.push(c);
+          }
+        }
+        // Then add API cases
+        for (const c of apiCases) {
+          if (!seenIds.has(c.caseId)) {
+            seenIds.add(c.caseId);
+            merged.push(c);
+          }
+        }
+
         setBenchmarks(benchData);
-        setCases(casesData.cases || []);
+        setCases(merged);
         setAuditLogs(auditData.logs || []);
       } catch (err) {
         console.error('Error loading initial data:', err);
@@ -80,8 +109,9 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
     initData();
   }, []);
 
-  // ── addCase: prepend and trigger re-derive ────────────────────────
+  // ── addCase: prepend, save to persistent storage, and trigger re-derive ──
   const addCase = useCallback((newCase: CollateralAssessmentCase) => {
+    saveLiveCase(newCase);
     setCases((prev) => [newCase, ...prev.filter((c) => c.caseId !== newCase.caseId)]);
   }, []);
 
@@ -155,12 +185,19 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
   }, [cases]);
 
   // ── Context Value ─────────────────────────────────────────────────
-  const value = useMemo<CaseContextValue>(
-    () => ({
+  const value = useMemo<CaseContextValue>(() => {
+    const liveCasesList = cases.filter((c) => c.isFreshCase);
+    const liveCount = liveCasesList.length;
+    const portfolioCount = cases.length - liveCount;
+
+    return {
       cases,
       benchmarks,
       auditLogs,
       loading,
+      portfolioCount,
+      liveCount,
+      totalCount: cases.length,
       liveKpis,
       localityList,
       addCase,
@@ -168,9 +205,8 @@ export function CaseProvider({ children }: { children: React.ReactNode }) {
       setAuditLogs,
       setBenchmarks,
       setLoading,
-    }),
-    [cases, benchmarks, auditLogs, loading, liveKpis, localityList, addCase]
-  );
+    };
+  }, [cases, benchmarks, auditLogs, loading, liveKpis, localityList, addCase]);
 
   return <CaseContext.Provider value={value}>{children}</CaseContext.Provider>;
 }

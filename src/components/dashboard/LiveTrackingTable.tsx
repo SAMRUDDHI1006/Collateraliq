@@ -287,7 +287,14 @@ export const LiveTrackingTable: React.FC<LiveTrackingTableProps> = ({
                     className="hover:bg-cyan-500/[0.03] cursor-pointer transition-colors duration-150 group"
                   >
                     <td className="py-3 px-3.5 font-mono font-bold text-cyan-400 group-hover:text-cyan-300 truncate">
-                      {c.caseId}
+                      <div className="flex items-center gap-1.5">
+                        <span>{c.caseId}</span>
+                        {c.isFreshCase && (
+                          <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/60 text-[9px] uppercase font-bold tracking-wider shrink-0">
+                            LIVE
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-3.5 font-semibold text-slate-100 group-hover:text-white truncate">
                       {c.borrowerName}

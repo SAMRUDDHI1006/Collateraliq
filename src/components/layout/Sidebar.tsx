@@ -10,6 +10,7 @@ import {
   PlusCircle,
   Database,
   Building2,
+  Sparkles,
 } from 'lucide-react';
 
 export type NavView = 'dashboard' | 'past_cases' | 'borrowers' | 'valuer_queue' | 'audit_logs';
@@ -18,6 +19,7 @@ interface SidebarProps {
   currentView: NavView;
   onSelectView: (view: NavView) => void;
   onOpenIntakeModal: () => void;
+  onOpenDemoCase?: () => void;
   valuerQueueCount?: number;
   isWorkbenchView?: boolean;
 }
@@ -26,6 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   onSelectView,
   onOpenIntakeModal,
+  onOpenDemoCase,
   valuerQueueCount = 1526,
   isWorkbenchView = false,
 }) => {
@@ -65,16 +68,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={railClass}>
-      <div className="p-3 space-y-4">
+      <div className="p-3 space-y-3">
         {/* Primary Action Button: + New Loan Case */}
         <button
           onClick={onOpenIntakeModal}
-          title="New Loan Case"
+          title="New Loan Case (Blank Case Intake)"
           className="w-full flex items-center justify-start gap-2.5 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-bold text-xs py-2.5 px-3 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-all overflow-hidden whitespace-nowrap cursor-pointer"
         >
           <PlusCircle className="w-4 h-4 shrink-0 stroke-[2.5]" />
           <span className="truncate tracking-tight">{isWorkbenchView ? 'New Case' : '+ New Loan Case'}</span>
         </button>
+
+        {/* Explore Demo Case Action */}
+        {onOpenDemoCase && (
+          <button
+            onClick={onOpenDemoCase}
+            title="Explore Flagship Demo Case (CLIQ-DADAR-001)"
+            className="w-full flex items-center justify-start gap-2 bg-[#101824] hover:bg-[#141E2B] border border-white/10 hover:border-amber-400/40 text-amber-300 font-semibold text-xs py-2 px-3 rounded-xl transition-all overflow-hidden whitespace-nowrap cursor-pointer shadow-xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+            <span className="truncate">{isWorkbenchView ? 'Demo Case' : 'Explore Demo Case'}</span>
+          </button>
+        )}
 
         {/* Navigation Menu */}
         <nav className="space-y-1">

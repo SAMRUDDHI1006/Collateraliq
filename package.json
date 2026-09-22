@@ -10,9 +10,11 @@
     "train": "python scripts/train_engine.py"
   },
   "dependencies": {
+    "@types/pdf-parse": "^1.1.5",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
     "next": "^14.2.24",
+    "pdf-parse": "^2.4.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.6.0"
